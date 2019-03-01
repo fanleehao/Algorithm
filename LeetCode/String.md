@@ -6,6 +6,12 @@
 
 &nbsp;
 
+[TOC]
+
+
+
+---
+
 #### 1. 独特的电子邮件地址 #929 
 
 - https://leetcode-cn.com/problems/unique-email-addresses/
@@ -731,7 +737,249 @@
 
 &nbsp;
 
-#### 20. 
+#### ==20. 括号生成 #22==
 
+- https://leetcode-cn.com/problems/generate-parentheses/
 
+- 给出 *n* 代表生成括号的对数，请你写出一个函数，使其能够生成所有可能的并且**有效的**括号组合。
 
+  例如，给出 *n* = 3，生成结果为：
+
+  ```properties
+  [
+    "((()))",
+    "(()())",
+    "(())()",
+    "()(())",
+    "()()()"
+  ]
+  ```
+
+- 思路：暴力？将会产生2^2n^个排列，再判断？这里可以使用递归来生产括号的序列，n长的序列，包含‘(’和‘)’加上n-1的序列。生成出一个序列后，对序列进行判断时，能够发现**规律**：序列的平衡性——按序遍历时，balance表示（左括号-又括号）的净值，一旦其值小于0，或者结果不为0，表示该序列不能配对。
+
+  ```java
+  public List<String> generateParenthesis(int n) {
+      List<String> combinations = new ArrayList();
+      generateAll(new char[2 * n], 0, combinations);
+      return combinations;
+  }
+  
+  public void generateAll(char[] current, int pos, List<String> result) {
+      if (pos == current.length) {
+          if (valid(current))
+              result.add(new String(current));
+      } else {
+          current[pos] = '(';
+          generateAll(current, pos+1, result);
+          current[pos] = ')';
+          generateAll(current, pos+1, result);
+      }
+  }
+  
+  public boolean valid(char[] current) {
+      int balance = 0;
+      for (char c: current) {
+          if (c == '(') balance++;
+          else balance--;
+          if (balance < 0) return false;
+      }
+      return (balance == 0);
+  }
+  ```
+
+  ```c++
+  vector<string> generateParenthesis(int n) {
+      vector<string> ret;
+      char tmp[2*n+1];
+      GenerateSq(tmp, 0, ret, 2*n);
+      return ret;
+  }
+  void GenerateSq(char tmp[], int pos, vector<string> &ret, int length){
+      if(pos == length){
+          if(valid(tmp, length))
+              ret.push_back(tmp);
+      }
+      else{
+          tmp[pos] = '(';
+          GenerateSq(tmp, pos+1, ret, length);
+          tmp[pos] = ')';
+          GenerateSq(tmp, pos+1, ret, length);
+      }
+  }
+  bool valid(char tmp[], int length){
+      int balance = 0;
+      for(int i = 0; i < length; i++){
+          if(tmp[i]=='(')
+              balance++;
+          else balance--;
+          if(balance<0)
+              return false;
+      }
+      return (balance==0);
+  }
+  ```
+
+- 思路2：回溯法。回溯算法实际上一个类似枚举的搜索尝试过程，主要是在搜索尝试过程中寻找问题的解，当发现已不满足求解条件时，就“回溯”返回，尝试别的路径。回溯法是一种选优搜索法，按选优条件向前搜索，以达到目标。但当探索到某一步时，发现原先选择并不优或达不到目标，就退回一步重新选择，这种走不通就退回再走的技术为回溯法，而满足回溯条件的某个状态的点称为“回溯点”。
+
+  ![1551343466836](assets/1551343466836.png)
+
+  > 回溯算法和递归算法的区别：回溯算法指的是一种思想，而递归算法则是指代码层面上的一种组织结构。
+
+  ```c++
+  vector<string> generateParenthesis(int n) {
+      vector<string> res;
+      Backtrack("",res,n,0,0);
+      return res;
+  }
+  void Backtrack(string cur, vector<string> &res, int n, int left, int right)
+  {
+      //因为right是右括号，数量=n 表明此时已经找到一个结果
+      if (right == n){
+          res.push_back(cur);
+      }
+      //可以添加一个左括号
+      if (left < n){
+          Backtrack(cur+'(',res,n,left+1,right);
+      }
+      //添加一个右括号
+      if (right < left){
+          Backtrack(cur+')',res,n,left,right+1);
+      }
+  }
+  ```
+
+  &nbsp;
+
+#### 21. 字符串相乘
+
+- https://leetcode-cn.com/problems/multiply-strings/
+
+- 给定两个以字符串形式表示的非负整数 `num1` 和 `num2`，返回 `num1` 和 `num2` 的乘积，它们的乘积也表示为字符串形式。不用大数等类库。
+
+- 思路：1. 长度为n,m的两个数的乘积的长度不会超过n+m的。可以直接模拟数的乘法：我们从最低位开始，一个数的i位和另一个数的j位相乘的结果，放在i+j和i+j+1两个位置上。
+
+  ![1551357921088](assets/1551357921088.png)
+
+  ```java
+  public static String multiply(String num1, String num2) {
+      char[] ret = new char[num1.length() + num2.length()];
+      for(int i = num1.length() - 1; i >= 0; i--){
+          for(int j = num2.length() - 1; j >= 0; j--){
+              ret[i+j+1] += (num1.charAt(i) - '0') * (num2.charAt(j) - '0');
+          }
+      }
+      int carry = 0;
+      for(int i = ret.length-1; i >= 0; i--){   //char类型会自动转成int进行计算
+          ret[i] += carry;
+          carry = ret[i] / 10;
+          ret[i] = (char) (ret[i] % 10);
+      }
+      int index = 0;
+      while(ret[index]==0 && index < ret.length - 1){  //char默认初始值为空，与0相等的,与' '字符不等
+          index++;
+      }
+      for(int i = index;i<ret.length;i++){
+          ret[i] += '0';   //把数组结果转成一个字符结果，如3-》'3';
+      }		
+      return new String(ret, index, ret.length - index);
+  }
+  ```
+
+  ```java
+  public static String multiply2(String num1, String num2) {
+      int[] ret = new int[num1.length() + num2.length()];
+      for(int i = num1.length() - 1; i >= 0; i--){
+          for(int j = num2.length() - 1; j >= 0; j--){
+          	 //直接处理每次的进位
+              int tmp = (num1.charAt(i) - '0') * (num2.charAt(j) - '0'); 
+              tmp += ret[i+j+1];
+              ret[i+j] += tmp / 10;   //记得累加
+              ret[i+j+1] = tmp % 10;				
+          }
+      }
+      //去前缀0
+      int index = 0;
+      while(index < ret.length - 1 && ret[index] == 0)   
+          index++;    //ret.length - 1是因为要保留最后一个0
+      StringBuilder sb = new StringBuilder();
+      for(;index<ret.length;index++){
+          sb.append(ret[index]);
+      }
+      return sb.toString();
+  }
+  ```
+
+  ```c++
+  string multiply(string num1, string num2) {
+      int ret[num1.length() + num2.length()] = {0};
+      int tmp = 0;
+      for(int i = num1.length()-1; i >= 0;  i--){
+          for(int j = num2.length()-1; j >= 0; j--){
+              tmp = (num1[i]-'0') * (num2[j]-'0');
+              tmp += ret[i+j+1];
+              ret[i+j] += tmp / 10;  //此处记得累加前一位的值，有i+j=j+i的时候
+              ret[i+j+1] = tmp % 10;  //这个就是剩余的余数了
+          }
+      }
+      int index = 0;
+      while(index<(num1.length() + num2.length() - 1) && ret[index] == 0)
+          index++;
+      string res;
+      for(int i = index; i < num1.length() + num2.length(); i++){
+          res += to_string(ret[i]);
+      }
+      return res;
+  }
+  ```
+
+  &nbsp;
+
+#### 22. 二进制求和 #67
+
+- https://leetcode-cn.com/problems/add-binary/
+
+- 给定两个二进制字符串，返回他们的和（用二进制表示）。
+
+  输入为**非空**字符串且只包含数字 `1` 和 `0`。
+
+  **示例 1:**
+
+  ```properties
+  输入: a = "11", b = "1"
+  输出: "100"
+  输入: a = "1010", b = "1011"
+  输出: "10101"
+  ```
+
+- 思路：了解到高位可以用0补齐，这样可以在一个循环体中完成。
+
+  ```c++
+  string addBinary(string a, string b) {
+      string result; 
+      int carry=0, i,j;
+      for(i = a.size()-1 , j = b.size()-1; j>=0 || i>=0 ; j--,i--){
+          int i1 = i>=0?a[i]-'0':0;
+          int j1 = j>=0?b[j]-'0':0;   //高位补齐0
+          int temp = i1 + j1 + carry ;
+          if(temp > 1) 
+              carry=1;    //进位
+          else
+              carry=0;
+          if(temp == 2 || temp == 0)
+              result.insert(result.begin(),'0');
+          else
+              result.insert(result.begin(),'1');
+      }
+      if(carry == 1)
+          result.insert(result.begin(),'1');
+      return result;
+  }
+  ```
+
+  &nbsp;
+
+#### 23. 
+
+- ```
+  
+  ```
