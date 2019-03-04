@@ -222,4 +222,130 @@ int main()
   }
   ```
 
-- 
+
+&nbsp;
+
+#### 5. 重建二叉树
+
+- 根据前序遍历和中序遍历，构建二叉树
+
+- 从前序遍历中找打一个点，找到其在中序遍历的位置，前后分成两棵子树
+
+  ```c++
+  /**
+   * Definition for binary tree
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      TreeNode* reConstructBinaryTree(vector<int> pre,vector<int> vin) {
+          int len = pre.size() - 1;
+          return buildTree(pre, 0, len, vin, 0, len);
+      }
+      TreeNode *buildTree(vector<int>& preorder, int preL, int preR, vector<int>& inorder, int inL, int inR){
+          if(preL > preR) //遍历到头
+              return NULL;
+          int index = inL;
+          while(preorder[preL] != inorder[index])
+              index++;
+          int numL = index - inL;
+          TreeNode* root = new TreeNode(preorder[preL]);
+          root->left = buildTree(preorder, preL+1, preL+numL, inorder, inL, index-1);
+          root->right = buildTree(preorder, preL+numL+1, preR, inorder, index+1, inR);
+          return root;
+      }
+  };
+  ```
+
+  ```java
+  /**
+   * Definition for binary tree
+   * public class TreeNode {
+   *     int val;
+   *     TreeNode left;
+   *     TreeNode right;
+   *     TreeNode(int x) { val = x; }
+   * }
+   */
+  public class Solution {
+      public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
+          int len = pre.length - 1;  //length 是数组的属性，length()是字符串的方法
+          return buildTree(pre,0,len,in,0,len);
+      }
+      public TreeNode buildTree(int[] pre, int preL, int preR, int[] in, int inL, int inR){
+          if(preL > preR)
+              return null;
+          int index = inL;
+          while(pre[preL] != in[index])
+              index++;
+          int numL = index - inL;
+          TreeNode root = new TreeNode(pre[preL]);
+          root.left = buildTree(pre,preL+1,preL+numL,in,inL,index-1);
+          root.right = buildTree(pre,preL+numL+1,preR,in,index+1,inR);
+          return root;
+      }
+  }
+  ```
+
+&nbsp;
+
+#### 6. 用两个栈实现队列
+
+- 分析：如stack1和stack2；当压入栈时，直接放入stack1；弹出时，若stack2为空，则把stack1的元素依次弹出压入到stack2中，则stack2的栈顶元素就是队列应该出的元素。
+
+- **引申**：两个队列模拟栈；每次入queue1，出队时，除queue1最后一个元素，其他都到queue2中，删除queue1的剩余元素。*始终维护一个空队列，一个有数据的队列*
+
+  ```java
+  import java.util.Stack;
+  
+  public class Solution {
+      Stack<Integer> stack1 = new Stack<Integer>();
+      Stack<Integer> stack2 = new Stack<Integer>();
+      
+      public void push(int node) {
+          stack1.push(node);
+      }
+      
+      public int pop() {
+          if(stack2.empty()){
+             while(!stack1.empty()){
+                 int k = stack1.pop();
+                 stack2.push(k);
+             } 
+          }
+          return stack2.pop();
+      }
+  }
+  ```
+
+  ```c++
+  class Solution
+  {
+  public:
+      void push(int node) {
+          stack1.push(node);
+      }
+      int pop() {
+          int k;
+          if(stack2.empty()){
+              while(!stack1.empty()){
+                  k = stack1.top();
+                  stack2.push(k);                
+                  stack1.pop();
+              }
+          }
+          k = stack2.top();
+          stack2.pop();
+          return k;
+      }
+  
+  private:
+      stack<int> stack1;
+      stack<int> stack2;
+  };
+  ```

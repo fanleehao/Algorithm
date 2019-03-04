@@ -83,6 +83,41 @@ int main()
 
 ### 2 树
 
+#### 2.1 构建树
+
+```c++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int len = preorder.size() - 1;
+        return buildTree(preorder, 0, len, inorder, 0, len);
+    }
+    TreeNode *buildTree(vector<int>& preorder, int preL, int preR, vector<int>& inorder, int inL, int inR){
+        if(preL > preR) //遍历到头
+            return NULL;
+        int index = inL;
+        while(preorder[preL] != inorder[index])
+            index++;
+        int numL = index - inL;
+        TreeNode* root = new TreeNode(preorder[preL]);
+        root->left = buildTree(preorder, preL+1, preL+numL, inorder, inL, index-1);
+        root->right = buildTree(preorder, preL+numL+1, preR, inorder, index+1, inR);
+        return root;
+    }
+};
+```
+
+ 
+
 ### 3 递归
 
 #### 3.1 棋盘覆盖
@@ -132,6 +167,36 @@ void chessPan(int Prow, int Pcol, int x, int y, int Size)
         Pan[Prow+s][Pcol+s]=t;
         chessPan( Prow+s, Pcol+s, Prow+s, Pcol+s, s );
     }
+}
+```
+
+
+
+### 4 排序
+
+#### 4.1 基数排序
+
+```c++
+int main()
+{
+    int ages[] = {20,45,56,44,44,26,28,24,33,22,46};
+    int num = 11;
+    //给若干个区间的数排序---年龄
+    int timesOfAges[99];
+    memset(timesOfAges, 0, 99*sizeof(int));
+    for(int i = 0; i < num; i++){
+        timesOfAges[ages[i]]++;
+    }
+    int index = 0;
+    for(int i = 0; i < 99; i++){
+        for(int j = 0 ; j < timesOfAges[i]; j++){
+            ages[index++] = i;
+        }
+    }
+
+    for(auto x:ages)
+        cout<<x<<" ";
+    return 0;
 }
 ```
 

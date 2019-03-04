@@ -2515,7 +2515,293 @@
 
 &nbsp;
 
-#### 57. 
+#### 57. 不同路径 #62
+
+- https://leetcode-cn.com/problems/unique-paths/
+
+- 一个机器人位于一个 *m x n* 网格的左上角 （起始点在下图中标记为“Start” ）。
+
+  机器人每次只能向下或者向右移动一步。机器人试图达到网格的右下角（在下图中标记为“Finish”）。
+
+  问总共有多少条不同的路径？
+
+- 思路：利用动态规划思路来做，虽然不是一个最优解问题，但是会用到店铺的递推方案与思想。某个点的路径等于左边加上上边的总和。路径step(m,n)=C(m+n,n)=C(m+n,m);
+
+  ```c++
+  int uniquePaths(int m, int n) {
+      int dp[m][n];
+      for(int i = 0; i < m; i++){
+          for(int j = 0; j < n; j++){
+              dp[i][j] = 1;
+          }
+      }
+      for(int i = 1; i < m; i++){
+          for(int j = 1; j < n; j++){
+              dp[i][j] = dp[i-1][j] + dp[i][j-1];
+          }
+      }
+      return dp[m-1][n-1];
+  }
+  ```
+
+&nbsp;
+
+#### 58. 不同路径2 #63
+
+- https://leetcode-cn.com/problems/unique-paths-ii/submissions/
+- 一个机器人位于一个 *m x n* 网格的左上角 （起始点在下图中标记为“Start” ）。机器人每次只能向下或者向右移动一步。机器人试图达到网格的右下角（在下图中标记为“Finish”）。现在考虑网格中有障碍物。那么从左上角到右下角将会有多少条不同的路径？
+
+- 思路：同上，在不同的判断上做了一些条件处理，如果有障碍物则直接为0；一开始我打算标记成INT_MAX，后来解决没有那么麻烦
+
+  ```c++
+  int uniquePathsWithObstacles(vector<vector<int>>& obstacleGrid) {
+          int row = obstacleGrid.size();
+          if(row<=0)return 0;
+          int col = obstacleGrid[0].size();  
+          vector<long> tmp(col,0);
+          vector<vector<long>> dp(row,tmp);
+          for(int i = 0; i < row; i++){  //行处理
+              if(obstacleGrid[i][0]==0)
+                  dp[i][0] = 1;
+              else{
+                  while(i<row) dp[i++][0] = 0;
+              }           
+          }
+          for(int j = 0; j < col; j++){ //列初始化
+              if(obstacleGrid[0][j]==0)
+                  dp[0][j] = 1;
+              else{
+                  while(j<col) dp[0][j++] = 0;
+              }           
+          }
+          for(int i = 1; i < row; i++){
+              for(int j = 1; j < col; j++){
+                  if(obstacleGrid[i][j]==1){
+                      dp[i][j] = 0;
+                  }
+                  else dp[i][j] = dp[i-1][j] + dp[i][j-1];
+              }
+          }        
+          return dp[row-1][col-1];
+      }
+  ```
+
+  &nbsp;
+
+#### 59. 搜索二维矩阵 #74
+
+- https://leetcode-cn.com/problems/search-a-2d-matrix/
+
+- 编写一个高效的算法来判断 *m* x *n* 矩阵中，是否存在一个目标值。该矩阵具有如下特性：
+
+  - 每行中的整数从左到右按升序排列。
+  - 每行的第一个整数大于前一行的最后一个整数。
+
+- 思路：从左上角或右下角，每次可以剔除一行或一列；《剑指offer》#3
+
+  ```c++
+  bool searchMatrix(vector<vector<int>>& matrix, int target) {
+          int row = matrix.size();
+          if(row<=0 || matrix[0].empty()) return false;
+          int y = matrix[0].size() -1;
+          int x = 0;
+          while(y >=0 && x < row){
+              if(target>matrix[x][y])
+                  x++;
+              else if(target<matrix[x][y])
+                  y--;
+              else 
+                  return true;
+          }
+          return false;
+      }
+  ```
+
+&nbsp;
+
+#### 60. 单词搜索 #79
+
+- https://leetcode-cn.com/problems/word-search/
+
+- 给定一个二维网格和一个单词，找出该单词是否存在于网格中。
+
+  单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。
+
+  **示例:**
+
+  ```properties
+  board =
+  [
+    ['A','B','C','E'],
+    ['S','F','C','S'],
+    ['A','D','E','E']
+  ]
+  
+  给定 word = "ABCCED", 返回 true.
+  ```
+
+- 思路：BFS+回溯算法。分别在某一位置，往4个方向递归，不行就回溯。
+
+  ```c++
+  //以下代码会爆内存
+  bool exist(vector<vector<char>>& board, string word) {
+          if(word.size() == 0) return true;
+          if(board.size() == 0 || board[0].size() == 0) return false;
+          vector<bool> x(board[0].size(), false);
+          vector<vector<bool>> table(board.size(), x);
+          for(int i = 0; i < board.size(); ++i){
+              for(int j = 0; j < board[0].size(); ++j){
+                  if(board[i][j] == word[0]){
+                      if(func(board, word, i, j, 0, table)) return true;
+                  }
+              }
+          }
+          return false;
+      }
+      bool func(vector<vector<char>>& board, string word, int i, int j, int k, vector<vector<bool>> table){
+          if(k >= word.size()){
+              return true;
+          }
+          int m = board.size(), n = board[0].size();
+          if (i < 0 || j < 0 || i >= m || j >= n || table[i][j] || board[i][j] != word[k]) return false;
+          table[i][j] = true;
+          bool res = func(board, word, i-1, j, k+1, table) ||
+                  func(board, word, i+1, j, k+1, table) ||
+                  func(board, word, i, j-1, k+1, table) ||
+                  func(board, word, i, j+1, k+1, table);
+          table[i][j] = false;
+          return res;
+      }
+  ```
+
+  ```c++
+  //AC代码 
+  bool search(vector<vector<char>>& board,string word,int i,int j,int pos){
+          if(pos == word.size())
+              return true;
+          if(i < 0 || j < 0 || i >= board.size() || j >= board[i].size())
+              return false;
+          if(word[pos] != board[i][j])
+              return false;
+          char temp = board[i][j];
+          board[i][j] = '.';
+          bool result = search(board,word,i+1,j,pos+1) || search(board,word,i-1,j,pos+1) || search(board,word,i,j-1,pos+1) || search(board,word,i,j+1,pos+1);
+          board[i][j] = temp;
+          return result;
+      }
+      
+      bool exist(vector<vector<char>>& board, string word) {
+          for(int i = 0; i < board.size(); i ++)
+              for(int j = 0; j < board[i].size(); j ++)
+                  if(search(board, word, i, j, 0))
+                      return true;
+          return false;
+      }
+  ```
+
+  ```c++
+  //AC2
+  bool exist(vector<vector<char>>& board, string word) {
+          if(board.size()==0||board[0].size()==0) return false;
+          int m=board.size(),n=board[0].size();
+          vector<vector<bool> > visit(m,vector<bool>(n,false));
+          for(int i=0;i<m;++i)
+              for(int j=0;j<n;++j)
+                  if (existDFS(board,word,0,i,j,visit)) return true;
+          return false;
+          
+      }
+      bool existDFS(vector<vector<char> > & board,string word,int level,int i,int j,vector<vector<bool> > &visit)
+      {
+          if(level==word.size()) 
+              return true;
+          int m=board.size(),n=board[0].size();
+          if(i<0||j<0||i>=m||j>=n||board[i][j]!=word[level]||visit[i][j]) 
+              return false;
+          visit[i][j]=true;
+          bool ans=existDFS(board,word,level+1,i,j-1,visit)||            existDFS(board,word,level+1,i,j+1,visit)||existDFS(board,word,level+1,i-1,j,visit)||existDFS(board,word,level+1,i+1,j,visit);
+          visit[i][j]=false;
+          return ans;
+      }
+  ```
+
+&nbsp;
+
+#### 61. 从前序与中序遍历序列构造二叉树 #105
+
+- https://leetcode-cn.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/
+
+- 根据先序遍历，找一个节点；找到其在中序遍历中的位置，分成两半；递归的条件是剩余的节点不够了；
+
+  ```c++
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+          int len = preorder.size() - 1;
+          return buildTree(preorder, 0, len, inorder, 0, len);
+      }
+      TreeNode *buildTree(vector<int>& preorder, int preL, int preR, vector<int>& inorder, int inL, int inR){
+          if(preL > preR) //遍历到头
+              return NULL;
+          int index = inL;
+          while(preorder[preL] != inorder[index])
+              index++;
+          int numL = index - inL;
+          TreeNode* root = new TreeNode(preorder[preL]);
+          root->left = buildTree(preorder, preL+1, preL+numL, inorder, inL, index-1);
+          root->right = buildTree(preorder, preL+numL+1, preR, inorder, index+1, inR);
+          return root;
+      }
+  };
+  ```
+
+&nbsp;
+
+#### 62. 从中序与后序遍历序列构造二叉树 #106
+
+- https://leetcode-cn.com/problems/construct-binary-tree-from-inorder-and-postorder-traversal/
+
+- 类上，就是要注意边界范围的判断
+
+  ```c++
+  /**
+   * Definition for a binary tree node.
+   * struct TreeNode {
+   *     int val;
+   *     TreeNode *left;
+   *     TreeNode *right;
+   *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+   * };
+   */
+  class Solution {
+  public:
+      TreeNode* buildTree(vector<int>& inorder, vector<int>& postorder) {
+          int len = inorder.size()-1;
+          return buildTree(inorder,0,len,postorder,0,len);
+      }
+      TreeNode *buildTree(vector<int>& inorder, int inL, int inR, vector<int>& postorder, int postL, int postR){
+          if(postL > postR || inL > inR) //遍历到头
+              return NULL;
+          int index = inL;
+          while(postorder[postR] != inorder[index])
+              index++;
+          int numL = index - inL;
+          TreeNode* root = new TreeNode(postorder[postR]);         
+          root->left = buildTree(inorder, inL, index-1, postorder, postL, postL+numL-1);
+          root->right = buildTree(inorder, index+1, inR, postorder, postL+numL, postR-1);
+          return root;
+      }
+  };
+  ```
 
 
 
