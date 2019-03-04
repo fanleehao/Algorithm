@@ -200,3 +200,171 @@ int main()
 }
 ```
 
+
+
+### 5 查找
+
+#### 5.1 顺序查找(无序)
+
+- 普通的，使用循环遍历即可
+
+  ```c++
+  int Sequential_Search(int *num, int n, int key){
+      for(int i = 0; i < n; i++){
+          if(num[i] == key)
+          	return i;
+      }
+      return -1;
+  }
+  ```
+
+- 优化：设立一个**哨兵**，可以减少判断次数，提高效率
+
+  ```c++
+  int Sequential_Search2(int *num, int n, int key){
+      a[0] = key;			//哨兵
+      int index = n;
+      while(num[index] != key)
+      	index--;
+      return index;        //返回0则查找失败
+  }
+  ```
+
+  &nbsp;
+
+#### 5.2 二分查找
+
+- 折半查找。
+
+- 非递归：
+
+  ```c++
+  int Binary_Search(int *num, int n, int key){
+      int left, right, mid;
+      left = 1;  //数组为1-n下标
+      right = n;
+      while(left <= right){
+          mid = (left + right) / 2;
+          if(num[mid] < key)
+              left = mid + 1;
+          else if(num[mid] > key)
+              right = mid - 1;
+          else
+              return mid;
+      }
+      return 0;
+  }
+  ```
+
+- 递归：
+
+  ```c++
+  int Binary_Search2(int *num, int key, int left, int right){
+      if(left <= right){
+          int mid = (left + right) / 2;
+          if(num[mid] < key)
+              return Binary_Search2(num, key, mid+1, right);
+          else if(num[mid] > key)
+              return Binary_Search2(num, key, left, mid-1);
+          else
+              return mid;
+      }
+      return 0;
+  }
+  ```
+
+- 二分查找边界问题
+
+  ```c++
+  //第一个大于或等于key的数
+  int Binary_Search1(int * arr, int len, int key){
+      int left = 0;
+      int right = len - 1;
+      while(left <= right){
+          int mid = (left + right) / 2;
+          if(arr[mid] >= key)
+              right = mid - 1;
+          else
+              left = mid + 1;
+      }
+      return left;     //左边界
+  }
+  
+  //找到第一个等于target的index，也就是下边界
+  int Binary_Search2(int* arr, int len, int key){
+      int left = 0;
+      int right = len - 1;
+      while(left <= right){
+          int mid = (left + right) / 2;
+          if(arr[mid] >= key)
+              right = mid - 1;
+          else
+              left = mid + 1;
+          if(left < len && arr[left] == key)
+              return left;
+      }
+      return -1;
+  }
+  
+  //最后一个小于或等于key的数
+  int Binary_Search3(int * arr, int len, int key){
+      int left = 0;
+      int right = len - 1;
+      while(left <= right){
+          int mid = (left + right) / 2;
+          if(arr[mid] <= key)
+              left = mid + 1;
+          else
+              right = mid - 1;
+      }
+      return right;   //右边界
+  }
+  
+  //二分查找-----找到最后一个等于target的index，也就是上边界
+  int Binary_Search4(int* arr, int len, int key){
+      int left = 0;
+      int right = len - 1;
+      while(left <= right){
+          int mid = (left + right) / 2;
+          if(arr[mid] <= key)
+              left = mid + 1;
+          else
+              right = mid - 1;
+          /**这里和上面一个相比，如果这个条件成立时，继续执行这个逻辑按Binary_Search3中的话，right不会动，一直到跳出循环为止；*/
+          if(right >= 0 && arr[right] == key)   
+              return right;
+      }
+      return -1;
+  }
+  ```
+
+&nbsp;
+
+#### 5.3 插值查找
+
+- 插值查找是折半查找的，也可以按数的规律，每次折取一定比例；如1/4,3/4等；
+
+- 公式为：`mid = left + (right - left) (key - num[left])/(num[right] - num[left]) `
+
+- 适合在关键字分布比较均匀的情况下使用
+
+- 细微差别在海量数据处理中有影响
+
+  &nbsp;
+
+#### 5.4 斐波那契查找
+
+- 斐波那契查找：先找到数组个数在F(k-1),F(k)之间的`k`值，然后，补齐到F(k)之间的数据；
+- `mid = left + F(k-1) + 1`
+- 目标值在左边时，除right = mid - 1外，k = k-1;
+- 目标值在右边时，除left = mid + 1外，k=k-2;
+
+&nbsp;
+
+#### 5.5 二叉查找树（动态）
+
+- 二叉排序树，使用中序遍历可得到排序结果
+- 二叉查找树的构建，是提高插入、查找和删除的效率；并未为了排序
+
+&nbsp;
+
