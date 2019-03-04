@@ -349,3 +349,296 @@ int main()
       stack<int> stack2;
   };
   ```
+
+&nbsp;
+
+#### 7. 旋转数组的最小数字
+
+- 旋转数组中，找到最小的那个数；
+
+- 思路：最小值在前后分界点上，且是右边的第一个数。分析二分的时候，注意mid的值与前后left、right的值进行比较；若mid<=right的值，则剔除掉右半部分，反之剔除左半边部分，注意边界控制；
+
+- 备注：当数组中有重复元素时，要考虑特殊情况；
+
+  ```c++
+  int minNumberInRotateArray(vector<int> rotateArray) {
+          int left = 0;
+          int right = rotateArray.size()-1;
+          if(rotateArray.empty())  return 0;
+          int mid = left;
+          while(rotateArray[left] >= rotateArray[right]){
+              if(right-left==1){
+                  mid = right;
+                  break;
+              }
+              mid = (left + right) / 2;
+              if(rotateArray[left]==rotateArray[right] && rotateArray[mid]==rotateArray[left])
+                  return MinInOrder(rotateArray, left, right);
+              if(rotateArray[mid] <= rotateArray[right]){
+                  //右边递增序列中
+                  right = mid;
+              }
+              else if(rotateArray[mid] >= rotateArray[left]){
+                  left = mid;
+              }
+          }
+          return rotateArray[mid];
+      }
+      int MinInOrder(vector<int> rotateArray, int left, int right){
+          int res = rotateArray[left];
+          for(int i = left+1;i<=right;i++){
+              if(rotateArray[i] < res)
+                  res = rotateArray[i];
+          }
+          return res;
+      }
+  ```
+
+&nbsp;
+
+#### 8. 菲波那切数列
+
+- 递归与非递归
+
+  ```c++
+  int Fibonacci(int n) {
+          if(n<2)
+              return n;
+          //return Fibonacci(n-1)+Fibonacci(n-2);
+          int f0 = 0, f1 = 1;
+          int res;
+          while(n>=2){
+              res = f0 + f1;
+              f0 = f1;
+              f1 = res;
+              n--;
+          }
+          return res;
+      }
+  ```
+
+  ```c++
+  //青蛙跳台阶
+  int jumpFloor(int number) {
+          if(number<=2)
+              return number;
+          int res;
+          int f0 = 1, f1 = 2;
+          while(number>2){
+              res = f0 + f1;
+              f0 = f1;
+              f1 = res;
+              number--;
+          }
+          return res;
+      }
+  //青蛙跳台阶2
+  int jumpFloorII(int number) {
+          if(number<=2)
+              return number;
+          int f1 = 1,f2 = 1;
+          int res = 0, f3 = 2;
+          for(int i = 2; i <= number; i++){
+              res += f3;  //累加
+              f3 = res;
+          }
+          //return res;
+          return pow(2,number-1);
+      }
+  ```
+
+  ```c++
+  //矩形覆盖
+  int rectCover(int number) {
+          if(number<=2)
+              return number;
+          int f1 = 1,f2 = 2;
+          int res;
+          for(int i = 2; i < number; i++){
+              res = f1 + f2;
+              f1 = f2;
+              f2 = res;
+          }
+          return res;
+      }
+  ```
+
+&nbsp;
+
+#### 9. 二进制中1的个数
+
+- 判断一个数的二进制中1的个数
+
+- > 数字左移操作无区别；右移操作对无符号整数高位补0，有符号整数高位补符号数
+
+- 思路1：使用位移操作，每次比较最右边的是不是1（和1与操作），然后右移一位；这样容易出现负数的死循环问题。改用一个flag，从1开始，每次左移一位，进行与操作。这样将会循环很多次（int型循环32）。
+
+  ```c++
+  int  NumberOf1(int n) {
+       //避免右移操作，造成负数（有符号数）的死循环
+       int cnt = 0;
+       unsigned int flag = 1;
+       while(flag){
+           if(n & flag)
+               cnt++;
+           flag = flag << 1; //左移一位，直到32位次循环结束
+       }
+       return cnt;
+   }
+  ```
+
+- 思路2：“一个数减一操作后再和该数进行与操作，可以把该数最右边的1变为0”
+
+  ```c++
+  int  NumberOf1(int n) {
+       int cnt = 0;
+       while(n){
+           cnt++;
+           n = (n - 1) & n;
+       }
+       return cnt;
+   }
+  ```
+
+&nbsp;
+
+### 高质量的代码
+
+#### 10. 数值的整数次方
+
+- 求一个数的整数次方，实现库函数的Pow操作。
+
+- 注意点：一是长度问题，如果用double类型，一定注意判断相等的方式。要考虑异常边界
+
+  ```c++
+  class Solution {
+  public:
+      double Power(double base, int exponent) {
+          if(equal(base, 0.0) && exponent < 0)   //注意精度问题
+              return 0.0;
+          unsigned int absEx = (unsigned int) exponent;
+          if(exponent < 0)
+              absEx = (unsigned int) -exponent;
+          double ret = PowerWithUnsignedEx(base, absEx);
+          if(exponent < 0)
+              return 1.0 / ret;
+          return ret;        
+      }
+      bool equal(double x, double y){
+          if((x - y > -0.0000001) && (x - y < 0.0000001))
+              return true;
+          return false;
+      }
+      double PowerWithUnsignedEx(double base, unsigned int exponent){
+          double ret = 1.0;
+          for(unsigned int i = 1; i <= exponent; i++){ //此处容易类型不匹配出错
+              ret *= base;
+          }
+          return ret;
+      }
+  };
+  ```
+
+- 思路2：可以使用递归的方式。每次取平方根进行平方操作。考虑奇偶变化。使用位移操作是亮点。
+
+  ```c++
+  double PowerWithUnsignedEx2(double base, unsigned int exponent){
+      if(exponent == 0)
+          return 1;
+      if(exponent == 1)
+          return base;
+      double ret = PowerWithUnsignedEx2(base, exponent >> 1);
+      ret *= ret;
+      if(exponent & 0x1 == 1) //奇数
+          ret *= base;
+      return ret;
+  }
+  ```
+
+&nbsp;
+
+#### 11. 打印1到最大的n位数
+
+- 思路，使用字符串来模拟大数，将进位与打印拆分
+
+  ```c++
+  void PrintN(char *num){
+      int len = strlen(num);
+      int index = 0;
+      for(;index<len;index++){
+          if(num[index] != '0')
+              break;
+      }
+      for(;index<len;index++){
+          printf("%c", num[index]);
+      }
+      printf("\n");
+  }
+  //打印最大的1到n
+  bool IncrementN(char *num){
+      //cout<<num<<endl;
+      bool isOverflow = false;
+      int carry = 0;
+      int len = strlen(num);
+      for(int i = len - 1; i >= 0; i--){
+          int tmp = num[i] - '0' + carry;
+          if(i == len - 1)
+              tmp++;  //最后一位才加1
+          if(tmp >= 10){
+              if(i==0)  isOverflow = true;  //标记为爆战了
+              else{
+                  tmp -= 10;
+                  carry = 1;
+                  num[i] = tmp + '0';
+              }
+          }
+          else{        //没有进位
+              num[i] = '0' + tmp;
+              break;
+          }
+      }
+      return isOverflow;
+  }
+  void PrintMaxNDigits(int n){
+      if(n<=0)
+          return;
+      char *num = new char[n+1];
+      memset(num, '0', n);
+      num[n] = '\0'; //注意点
+      cout<<num<<endl;
+      while(!IncrementN(num)){
+          PrintN(num);
+      }
+      delete []num;
+  }
+  ```
+
+- 思路2：采用全排列的思路，1-最大的n位数，就是打印全排列。递归执行
+
+  ```c++
+  void Print1ToMaxNDigitsRecursively(char *num, int len, int index){
+      if(index == len - 1){
+          PrintN(num);
+          return;
+      }
+      for(int i = 0; i < 10; i++){
+          num[index+1] = i + '0';
+          Print1ToMaxNDigitsRecursively(num, len, index+1);
+      }
+  }
+  
+  void PrintMaxNDigits2(int n){
+      if(n<=0)
+          return;
+      char *num = new char[n+1];
+      memset(num,'0',n);
+      num[n] = '\0';
+      for(int i = 0; i < 10; i++){
+          num[0] = i + '0';   //第一位
+          Print1ToMaxNDigitsRecursively(num, n, 0);
+      }
+      delete []num;
+  }
+  ```
+
+
