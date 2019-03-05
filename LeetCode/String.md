@@ -978,8 +978,222 @@
 
   &nbsp;
 
-#### 23. 
+#### 23. 字母异位词分组 #49
 
-- ```
-  
+- https://leetcode-cn.com/problems/group-anagrams/
+
+- 给定一个字符串数组，将字母异位词组合在一起。字母异位词指字母相同，但排列不同的字符串。
+
+  **示例:**
+
+  ```properties
+  输入: ["eat", "tea", "tan", "ate", "nat", "bat"],
+  输出:
+  [
+    ["ate","eat","tea"],
+    ["nat","tan"],
+    ["bat"]
+  ]
   ```
+
+- 思路：使用一个map来辅助记录某一个分组。
+
+  ```c++
+  vector<vector<string>> groupAnagrams(vector<string>& strs) {
+          vector<vector<string>> ret;
+          map<string, int> m;
+          for(int i = 0, index = 0; i < strs.size(); i++){
+              string str = strs[i];
+              sort(str.begin(), str.end());
+              if(m.count(str)==0){
+                  m[str] = index;
+                  ret.push_back(vector<string>{strs[i]});  //注意空指针
+                  index++;
+              }else{
+                  ret[m[str]].push_back(strs[i]);
+              }
+          }
+          return ret;
+      }
+  ```
+
+&nbsp;
+
+#### ==24. 复原IP地址 #93==
+
+- https://leetcode-cn.com/problems/restore-ip-addresses/
+
+- 给定一个只包含数字的字符串，复原它并返回所有可能的 IP 地址格式。
+
+  **示例:**
+
+  ```properties
+  输入: "25525511135"
+  输出: ["255.255.11.135", "255.255.111.35"]
+  ```
+
+- 思路1：暴力，每次获取不超过3位，用三个循环来完成
+
+  ```java
+  class Solution {
+      public List<String> restoreIpAddresses(String s) {
+          List<String> res = new ArrayList<>();
+          if (s == null || s.length() == 0 || s.length() > 12) {
+              return res;
+          }
+          for (int i = 1; i <= 3 && i < s.length(); i++) {
+              String p1 = s.substring(0, i);
+              if (isLegal(p1)) {
+                  for (int j = i + 1; j <= 6 && j < s.length(); j++) {
+                      String p2 = s.substring(i, j);
+                      if (isLegal(p2)) {
+                          for (int k = j + 1; k <= 9 && k < s.length(); k++) {
+                              String p3 = s.substring(j, k);
+                              if (isLegal(p3)) {
+                                  String p4 = s.substring(k);
+                                  if (isLegal(p4)) {
+                                      res.add(p1 + "." + p2 + "." + p3 + "." + p4);
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          return res;
+      }
+  
+      public boolean isLegal(String p) {
+          if (p.startsWith("0")) {
+              return "0".equals(p);
+          } else {
+              return Integer.valueOf(p) <= 255;
+          }
+      }
+  }
+  ```
+
+- 思路2：回溯+递归。取一个候选子串，判断是否合理；接着index往下递归；
+
+  ```c++
+  vector<string> restoreIpAddresses(string s) {
+      vector<string> ret;
+      if(s.empty() || s.length() < 4 || s.length() > 12)
+          return {};
+      BKTrace(ret, s, "", 0, 0);
+      return ret;
+  }
+  void BKTrace(vector<string> &ret, string s, string tmp, int parts, int index){
+      if(parts > 4)
+          return;
+      if(parts == 4 && index == s.length()){
+          ret.push_back(tmp);
+          return;
+      }
+      for(int i = 1; i+index <= s.length() && i <= 3; i++){
+          if(s.at(index) == '0'){ //前缀0的处理
+              BKTrace(ret, s, tmp + (parts == 3 ? "0" : "0."), parts+1, index+1);
+              return;  //此处必须return，否则会继续处理
+          }
+          string sub = s.substr(index, i);
+          if(stoi(sub) > 255)
+              return;
+          BKTrace(ret, s, tmp + sub + (parts == 3 ? "" : "."), parts+1, index+i);
+      } 
+  }
+  ```
+
+#### 25. 翻转字符串里的单词 #151
+
+- https://leetcode-cn.com/problems/reverse-words-in-a-string/submissions/
+
+- 给定一个字符串，逐个翻转字符串中的每个单词。 
+
+  **示例 1：**
+
+  ```properties
+  输入: "the sky is blue"
+  输出: "blue is sky the"
+  ```
+
+- 代码
+
+  ```c++
+  string reverseWords(string s) {
+          int right = s.length() - 1;
+          string ret = "";
+          int left = right;
+          if(s.empty())
+              return ret;
+          while(right>=0 && left >=0){
+              while(right >= 0 && s[right] == ' '){
+                  right--;
+                  left--;
+              }
+              while(left >= 0 && s[left] != ' '){
+                  left--;
+              }
+              string tmp = s.substr(left+1, right-left);
+              ret += tmp;
+              if(left>0)
+                  ret += " ";
+              right = left;
+          }
+          if(ret[ret.length()-1]==' ')
+              ret = ret.substr(0, ret.length()-1);
+          return ret;
+      }
+  ```
+
+&nbsp;
+
+####  26. 压缩字符串 #443
+
+- https://leetcode-cn.com/problems/string-compression/
+
+- 给定一组字符，使用原地算法将其压缩。压缩后的长度必须始终小于或等于原数组长度。数组的每个元素应该是长度为1 的**字符**（不是 int 整数类型）。在完成原地**修改输入数组**后，返回数组的新长度。
+
+- **示例 1：**
+
+  ```properties
+  输入：
+  ["a","a","b","b","c","c","c"]
+  输出：
+  返回6，输入数组的前6个字符应该是：["a","2","b","2","c","3"]
+  ```
+
+- 思路：双指针法。
+
+  ```c++
+  int compress(vector<char>& chars) {
+          int len = chars.size() ;
+          if(chars.empty()) return 0;
+          int left = 0, right = 0;
+          int index = 0;
+          while(right<len){
+              while(right < len && chars[right]==chars[left])
+                  right++;
+              if(right-left==1){
+                  chars[index++] = chars[left];
+                  left++;
+              }
+              else{
+                  chars[index++] = chars[left];
+                  int cnt = right - left;
+                  int n = 10;
+                  while(n<=cnt)
+                      n = n * 10;
+                  n /= 10;
+                  while(n>0){
+                      chars[index++] = cnt / n + '0';
+                      cnt  %= n;
+                      n /= 10;
+                  }
+                  left = right;
+              }
+          }
+          return index;
+      }
+  ```
+
+
