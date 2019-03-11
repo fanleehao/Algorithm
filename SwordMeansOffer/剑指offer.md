@@ -754,3 +754,247 @@ int main()
       Reorder(num, len, isEven);
   }
   ```
+
+&nbsp;
+
+#### 14. 链表中倒数第K个结点
+
+- 遍历一次找到倒数第K个结点；单链表，假设长度为n，结点为1-n，则倒数第K个是n-k+1.
+
+- 通常可以两次遍历获取，但是使用双指针一次遍历即可。
+
+- 思路：前指针先走K-1步，然后两个指针一起走，直到前指针到链表尾部
+
+- 鲁棒性：
+
+  - 链表为空，返回null
+  - k不在链表范围内，NULL
+
+  ```c++
+  struct ListNode {
+  	int val;
+  	struct ListNode *next;
+  	ListNode(int x) :val(x), next(NULL) {}
+  }
+  
+  ListNode* FindKthToTail(ListNode* pListHead, unsigned int k) {
+      if(pListHead == NULL || k==0)
+          return NULL;
+      ListNode *pAhead = pListHead;
+      ListNode *pBehind = pListHead;
+      for(int i = 0; i < k-1; i++){		//防止溢出
+          if(pAhead->next != NULL)
+              pAhead = pAhead->next;
+          else
+              return NULL;                
+      }
+      while(pAhead->next != NULL){
+          pAhead = pAhead->next;
+          pBehind = pBehind->next;
+      }
+      return pBehind;
+  }
+  ```
+
+&nbsp;
+
+#### 15. 反转链表
+
+- 输入一个链表的头结点，反转该链表，然后输出链表头结点
+
+- 使用三个指针，分别指向当前结点，前驱结点和后继结点。处理时，将当前结点的指针指向前驱，然后下一个；直到链表结尾。
+
+  ```c++
+  ListNode* ReverseList(ListNode* pHead) {
+      ListNode *pReversedHead = NULL;  //前部分已经反转好的头
+      ListNode *pCur = pHead;
+      ListNode *pPre = NULL;
+      while(pCur != NULL){  //没有到链表尾
+          ListNode *pNext = pCur->next;
+          if(pNext==NULL)
+              pReversedHead = pCur;   //已经到尾了
+          pCur->next = pPre;   //割断，指向前
+          pPre = pCur;         //遍历右移
+          pCur = pNext;
+      }
+      return pReversedHead;
+  }
+  ```
+
+  ```c++
+  //递归
+  ListNode* ReverseList(ListNode* pHead) {
+      //如果链表为空或者链表中只有一个元素
+      if(pHead==NULL||pHead->next==NULL) return pHead;
+  
+      //先反转后面的链表，走到链表的末端结点
+      ListNode* pReverseNode=ReverseList(pHead->next);
+  
+      //再将当前节点设置为后面节点的后续节点，也就是说让我的后一个指向我
+      pHead->next->next=pHead;
+      pHead->next=NULL;
+  
+      return pReverseNode;
+  
+  }
+  ```
+
+&nbsp;
+
+#### 16. 合并两个排序的链表
+
+- 两个递增的链表，合并后仍然递增
+
+- 两个指针，分别遍历，注意空指针的**鲁棒性**问题
+
+  ```c++
+  ListNode* Merge(ListNode* pHead1, ListNode* pHead2){
+      if(pHead1==NULL)
+          return pHead2;
+      else if(pHead2==NULL)
+          return pHead1;
+      ListNode *mergedHead = NULL;
+      if(pHead1->val < pHead2->val){
+          mergedHead = pHead1;
+          mergedHead->next = Merge(pHead1->next, pHead2);
+      }
+      else{
+          mergedHead = pHead2;
+          mergedHead->next = Merge(pHead1, pHead2->next);
+      }
+      return mergedHead;
+  }
+  ```
+
+  ```c++
+  //非递归
+  ListNode* Merge(ListNode* pHead1, ListNode* pHead2){
+          if(pHead1==NULL)
+              return pHead2;
+          else if(pHead2==NULL)
+              return pHead1;
+          ListNode *mergedHead = NULL;
+          ListNode *current = NULL;
+          /*if(pHead1->val < pHead2->val){
+              mergedHead=pHead1;
+              pHead1=pHead1->next;
+          }            
+          else{
+              mergedHead=pHead2;
+              pHead2=pHead2->next;
+          }*/
+          //current = mergedHead;
+          while(pHead1!=NULL && pHead2!=NULL){
+              if(pHead1->val < pHead2->val){
+                  if(mergedHead==NULL)
+                      mergedHead=current=pHead1;
+                  else{
+                      current->next = pHead1;
+                      current = current->next;
+                  }                
+                  pHead1=pHead1->next;
+              }
+              else{
+                  if(mergedHead==NULL)
+                      mergedHead=current=pHead2;
+                  else{
+                      current->next = pHead2;
+                      current=current->next;
+                  }                
+                  pHead2=pHead2->next;
+              }
+          }
+          if(pHead1==NULL)
+              current->next = pHead2;
+          else
+              current->next = pHead1;
+          return mergedHead;
+      }
+  ```
+
+  &nbsp;
+
+#### 17. 树的子结构
+
+- 输入两颗二叉树A、B，判断B是不是A的子树
+
+- 思路：递归的遍历树，匹配一个结点，如果匹配，继续匹配左、右子树；否则，去找当前树的子树继续匹配，不行再继续匹配右子树。
+
+- 代码中的flag，可以使用||短路进行省略
+
+  ```c++
+  bool HasSubtree(TreeNode* pRoot1, TreeNode* pRoot2){  //递归遍历二叉树1,从根节点开始遍历
+          bool ret = false;
+          if(pRoot1!=NULL && pRoot2!=NULL){
+              if(pRoot1->val==pRoot2->val)
+                  ret = DoesTree1HaveTree2(pRoot1,pRoot2); //以当前结点为起点，遍历是否包含子树
+              if(!ret)
+                  ret = HasSubtree(pRoot1->left, pRoot2);
+              if(!ret)
+                  ret = HasSubtree(pRoot1->right, pRoot2);
+          }
+          return ret;
+      }
+      bool DoesTree1HaveTree2(TreeNode* pRoot1, TreeNode* pRoot2){
+          if(pRoot2==NULL)
+              return true;
+          if(pRoot1==NULL)
+              return false;
+          if(pRoot1->val != pRoot2->val)
+              return false;
+          return DoesTree1HaveTree2(pRoot1->left,pRoot2->left) && 	
+              	DoesTree1HaveTree2(pRoot1->right,pRoot2->right);
+      }
+  ```
+
+&nbsp;
+
+### 解决面试题的思路
+
+#### 18. 二叉树的镜像
+
+- 树的镜像，就是交互树的所有非叶子结点的左右子结点。
+
+- 思路：先序遍历树，某个结点有子结点，就交换其左右顺序。直到所有的非叶子结点全都遍历。
+
+  ```c++
+  void Mirror(TreeNode *pRoot) {
+          if(pRoot==NULL || (pRoot->left == NULL && pRoot->right==NULL))
+              return;
+          TreeNode *pTemp = pRoot->left;  //交换左右子树
+          pRoot->left = pRoot->right;
+          pRoot->right = pTemp;
+          if(pRoot->left)
+              Mirror(pRoot->left);
+          if(pRoot->right)
+              Mirror(pRoot->right);
+      }
+  ```
+
+  ```c++
+  //非递归
+  void Mirror(TreeNode *pRoot) {
+          if(pRoot==NULL)
+              return;
+          stack<TreeNode*> stackNode;
+          stackNode.push(pRoot);
+          while(stackNode.size()){
+              TreeNode* tree=stackNode.top();
+              stackNode.pop();
+              if(tree->left!=NULL || tree->right!=NULL){
+                  TreeNode *ptemp=tree->left;
+                  tree->left=tree->right;
+                  tree->right=ptemp;
+              }
+              if(tree->left)
+                  stackNode.push(tree->left);
+              if(tree->right)
+                  stackNode.push(tree->right);
+          }
+      }
+  ```
+
+  &nbsp;
+
+#### 19. 顺时针打印矩阵
+
