@@ -25,18 +25,18 @@ using namespace std;
 //next[j]
 void makeNext(const char P[],int next[])
 {
-    int q,k;//q:模版字符串下标；k:最大前后缀公有长度
+    int i,k;//i:模版字符串下标；k:最大前后缀公有长度
     int m = strlen(P);//模版字符串长度
     next[0] = 0;//模版字符串的第一个字符的最大前后缀长度为0
-    for (q = 1,k = 0; q < m; ++q)//for循环，从第二个字符开始，依次计算每一个字符对应的next值
+    for (i = 1,k = 0; i < m; ++i)//for循环，从第二个字符开始，依次计算每一个字符对应的next值
     {
-        while(k > 0 && P[q] != P[k])//递归的求出P[0]···P[q]的最大的相同的前后缀长度k
+        while(k > 0 && P[i] != P[k])//递归的求出P[0]···P[i]的最大的相同的前后缀长度k
             k = next[k-1];          //不理解没关系看下面的分析，这个while循环是整段代码的精髓所在，确实不好理解
-        if (P[q] == P[k])//如果相等，那么最大相同前后缀长度加1
+        if (P[i] == P[k])//如果相等，那么最大相同前后缀长度加1
         {
             k++;
         }
-        next[q] = k;
+        next[i] = k;
     }
 }
 //index
@@ -368,3 +368,253 @@ int main()
 
 &nbsp;
 
+
+
+&nbsp;
+
+### 6 排列组合
+
+#### 6. 1 计算组合数C(n,m)
+
+计算C(n,m)的方式，常见的几种；分别能够满足一定的需要；
+
+- 方法1：暴力。一般而言，暴力最多只能得到n<15以内的值。10!=3628800,14!=87,178,291,200，一般如果4字节的int型为2,147,483,648.  通常n一般到12就会溢出了。用Long Long或者高精度，可以再适当提高，不过都是较小的两位数（20左右）。
+
+  ```c++
+  int Combination(int n, int m) 
+  { 
+      const int M = 10007;     //结果取模
+      int ans = 1; 
+      for(int i=n; i>=(n-m+1); --i) 
+          ans *= i; 
+      while(m) 
+          ans /= m--; 
+      return ans % M; 
+  }
+  ```
+
+- 方法2：递推+打表。根据公式C(n,m) = C(n-1,m) + C(n-1, m-1); 可以构建一个二维表。一般可以达到n=10000左右。查询时间短，构建时间为O(n^2^).
+
+  ```c++
+  const int M = 10007; 
+  const int MAXN = 1000; 
+  int C[MAXN+1][MAXN+1]; 
+  void Initial() 
+  { 
+      int i,j; 
+      for(i=0; i<=MAXN; ++i) 
+      { 
+          C[0][i] = 0; 
+          C[i][0] = 1; 
+      } 
+      for(i=1; i<=MAXN; ++i) 
+      { 
+          for(j=1; j<=MAXN; ++j) 
+          C[i][j] = (C[i-1][j] + C[i-1][j-1]) % M; 
+      } 
+  } 
+  int Combination(int n, int m) 
+  { 
+      return C[n][m]; 
+  } 
+  ```
+
+- 方法3：**质因数**分解法，C(n,m)=n!/m!*(n-m)!，假设某一个质因数p在n!中出现次数为a，在m!中出现b次，在(n-m)!中出现c次，则最终结果为（a-b-c）次。C(n,m)=p~1~^a1-b1-c1^p~2~^a2-b2-c2^…p~k~^ak-bk-ck^.   n!分解后p的次数为：**n/p+n/p^2^+…+n/p^k^ **。这种方法一般能达到n=10000000左右，但是数很大的时候，内存消耗也大。
+
+  其中的生成某个区间的质数方法：
+
+  ```c++
+  vector<int> produce_prim_number(){   //生产质数 
+      vector<int> prim; 
+      prim.push_back(2); 
+      int i,j; 
+      for(i=3;i*i<=maxn;i+=2){ 
+          if(!arr[i]) { 
+              prim.push_back(i); 
+              for(j=i*i;j<=maxn;j+=i) 
+                  arr[j]=true; 
+          } 
+      } 
+      while(i<maxn){ 
+          if(!arr[i]) 
+              prim.push_back(i); 
+          i+=2; 
+      } 
+      return prim; 
+  } 
+  ```
+
+  ```c++
+  const int maxn=1000000; 
+  bool arr[maxn+1]={false}; 
+  vector<int> produce_prim_number(){   //生产质数 
+      vector<int> prim; 
+      prim.push_back(2); 
+      int i,j; 
+      for(i=3;i*i<=maxn;i+=2){ 
+          if(!arr[i]) { 
+              prim.push_back(i); 
+              for(j=i*i;j<=maxn;j+=i) 
+                  arr[j]=true; 
+          } 
+      } 
+      while(i<maxn){ 
+          if(!arr[i]) 
+              prim.push_back(i); 
+          i+=2; 
+      } 
+      return prim; 
+  } 
+  //计算n!中素数因子p的指数  
+  int cal(int n,int p) { 
+      int ans=0; 
+      long long rec=p; 
+      while(n>=rec)   { 
+              ans+=n/rec; 
+              rec*=p; 
+      } 
+      return ans; 
+  } 
+  //计算n的k次方对m取模，二分法  
+  int pow(long long n,int k,int M) 
+  { 
+      long long ans=1; 
+      while(k) { 
+          if(k&1)  //k为奇数
+              ans=(ans*n)%M;
+          n=(n*n)%M; 
+          k>>=1;   //除2
+      } 
+      return ans; 
+  } 
+  //计算C（n，m）  
+  int combination(int n,int m) { 
+      const int M=10007; 
+      vector<int> prim=produce_prim_number(); 
+      long long ans=1; 
+      int num; 
+      for(int i=0;i<prim.size()&&prim[i]<=n;++i) 
+      { 
+          num=cal(n,prim[i])-cal(m,prim[i])-cal(n-m,prim[i]); 
+          ans=(ans*pow(prim[i],num,M)) % M; 
+      } 
+      return ans; 
+  } 
+  ```
+
+- 方法4：*拓展的欧几里得算法*
+
+  ```c++
+  #include <stdio.h>
+  const int M = 2013;
+  int ff[M+5];  //打表，记录n!，避免重复计算
+   
+  //求最大公因数   ——辗转相除法
+  int gcd(int a,int b){
+      if(b==0)
+          return a;
+      else
+          return gcd(b,a%b);
+  }
+   
+  //解线性同余方程，扩展欧几里德定理
+  int x,y;
+  void Extended_gcd(int a,int b)
+  {
+      if(b==0)
+      {
+          x=1;
+          y=0;
+      }
+      else
+      {
+          Extended_gcd(b,a%b);
+          long t=x;
+          x=y;
+          y=t-(a/b)*y;
+      }
+  }
+   
+  //计算不大的C(n,m)
+  int C(int a,int b)
+  {
+      if(b>a)
+          return 0;
+      b=(ff[a-b]*ff[b])%M;
+      a=ff[a];
+      int c=gcd(a,b);
+      a/=c;
+      b/=c;
+      Extended_gcd(b,M);
+      x=(x+M)%M;
+      x=(x*a)%M;
+      return x;
+  }
+   
+  //Lucas定理
+  int Combination(int n, int m)
+  {
+      int ans=1;
+      int a,b;
+      while(m||n)
+      {
+          a=n%M;
+          b=m%M;
+          n/=M;
+          m/=M;
+          ans=(ans*C(a,b))%M;
+      }
+      return ans;
+  }
+   
+  int main()
+  {
+      int i,m,n;
+      ff[0]=1;
+      for(i=1; i<=M; i++) //预计算n!
+          ff[i]=(ff[i-1]*i)%M;
+      while(~scanf("%d%d",&n, &m))
+      {
+          printf("%d\n",Combination(n,m));
+      }
+      return 0;
+  }
+  ```
+
+&nbsp;
+
+#### 6.2 下一个排列
+
+- 递归的方法：求下一个子数组的全排列。
+
+  - 将每个元素都与子数组的第一个元素交换，
+  - 再求剩余部分的全排列，
+  - 求完后再交换会来，复原原数组。
+
+  ```c++
+  void swap(int &a,int &b){
+      int temp=a;
+      a=b;
+      b=temp;
+  }
+  void perm(int list[],int low,int high){
+      if(low==high){   //当low==high时,此时list就是其中一个排列,输出list
+          for(int i=0;i<=low;i++)
+              cout<<list[i];
+          cout<<endl;
+      }else{
+          for(int i=low;i<=high;i++){//每个元素与第一个元素交换
+              swap(list[i],list[low]); 
+              perm(list,low+1,high); //交换后,得到子序列,用函数perm得到子序列的全排列
+              swap(list[i],list[low]);//最后,将元素交换回来,复原,然后交换另一个元素
+          }
+      }
+  }
+   
+  int main()
+  {
+      int list[]={1,2,3};
+      perm(list,0,2);   //必须有序
+      return 0;
+  }
+  ```

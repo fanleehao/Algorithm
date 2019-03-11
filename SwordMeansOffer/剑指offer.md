@@ -641,4 +641,116 @@ int main()
   }
   ```
 
+&nbsp;
 
+#### 12. O(1) 时间删除链表结点
+
+- 思路，只要当待删除的结点i不是头结点或尾结点时，可以找到i的下一个节点j，将j的内容复制到i，修改指针再删除j即可。 否则，还是需要从头结点开始遍历，注意若是删除头结点则需另外将头结点置为null.
+
+  ```c++
+  typedef struct LinkNode{
+      int value;
+      LinkNode * next;
+  }LinkNode;
+  //两个**表示指向指针的指针。*pListHead代表头结点
+  void DeleteNode(LinkNode** plistHead, ListNode * pToBeDeleted){
+      if(!pListHead || !pToBeDeleted)
+          return;
+      //非尾节点
+      if(pToBeDeleted->next != NULL){
+          ListNode* p = pToBeDeleted->next;
+          pToBeDeleted->value = p->value;
+          pToBeDeleted->next = p->next;
+          delete p;    //delete是释放指针所指的内存，此时p为野指针
+          p = NULL;
+      }
+      //头结点，且尾节点
+      else if(*pListHead == pToBeDeleted){
+          delete pToBeDeleted;
+          pToBeDeleted = NULL;
+          *pListHead = NULL;
+      }
+      else{//多个结点的尾节点
+          ListNode *p = *pListHead;
+          while(p->next != pToBeDeleted)
+              p = p->next;
+          p-next = NULL;
+          delete pToBeDeleted;
+          pToBeDeleted = NULL;
+      }
+  }
+  ```
+
+- 限制：需要保证链表中确实存在该结点。
+
+&nbsp;
+
+#### 13. 调整数组顺序使奇数在偶数前面
+
+- 思路1：暴力O(n^2^)，遍历遇到是偶数，则将后面的数向前一位，然后将该数插入末尾。或者反过来。
+
+- 思路2：类似插入排序或者冒泡排序，当是奇数是不停地向前交换
+
+  ```c++
+  void reOrderArray(vector<int> &array) {
+      int len = array.size();
+      for(int i = 1; i < len; i++){
+          int temp = array[i];
+          if((temp & 1) != 1)
+              continue;
+          for(int j = i; j>0; j--){
+              if(array[j-1] % 2 == 0)
+                  swap(array[j], array[j-1]);
+              else break;
+          }
+      }
+  }
+  ```
+
+- 思路3：暴力O(n)+O(N)，遍历，拷贝到另一个数组中。
+
+- 思路4：双指针，前后指针法，前奇后偶，遇到不是的就交换两个数，直到两个指针相错。
+
+  ```c++
+  void reOrderArray(vector<int> &array) {
+      int left=0;
+      int right = array.size() - 1;
+      if(right<1) return;
+      while(left<right){  //小于等于无所谓
+          while(left < right && (array[left] & 0x1) != 0)
+              left++;
+          while(left < right && (array[right] & 0x1) == 0)
+              right--;
+          if(left<right)
+              swap(array[left], array[right]);
+      }
+  }
+  ```
+
+- 拓展：条件可以是负数在前，3的倍数在前…………解耦抽离
+
+  ```c++
+  bool isEven(int n){
+      return (n & 1) == 0;
+  }
+  void Reorder(int *num, int len, bool (*func)(int)){
+      if(num == NULL || len == 0)
+      	return;
+      int *left = num;
+      int *right = num + len - 1;
+      while(left<right){
+          while(left<right && !func(*left))
+          	left++;
+          while(left<right) && func(*right)
+          	right--;
+          if(left<right){
+              int temp = *left;
+              *left = *right;
+              *right = temp;
+          }
+      }
+  }
+  void ReorderWithEven(int num, int len){
+      Reorder(num, len, isEven);
+  }
+  ```
