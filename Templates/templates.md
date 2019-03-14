@@ -174,7 +174,254 @@ void chessPan(int Prow, int Pcol, int x, int y, int Size)
 
 ### 4 排序
 
-#### 4.1 基数排序
+> 排序的稳定性：如果两个待排序记录的关键字相同，那么如果在排序前后，这两个记录的相对顺序在排序前后不发生变化，就是稳定的；否则就是不稳定的。
+>
+> 不稳定的排序有堆排序、快速排序和希尔排序；这些排序需要大幅调动和交换元素，或者存在建堆这样的调整过程，会打乱相同键值元素的相对顺序。
+>
+> **内排序和外排序**：是否在内存中进行
+>
+> 一般内排序分为：插入排序（直接插入、希尔）、交换排序（冒泡、快排）、选择排序（简单选择、堆排序）、归并排序
+
+#### 4.1 冒泡排序
+
+交换排序，两两比较相邻记录的关键字，如果反序的话就交换。
+
+注意：第二重循环，从后往前比较交换，可以将较小的数字往上冒；如果是从前往后比较，则相对较大的值会保持不动。如第一个元素是1，最后一个元素是2、3等。
+
+```c++
+void BubbleSort(int *num, int len){
+    for(int i = 0; i < len; i++){
+        for(int j = len - 1; j > i; j--){
+            if(num[j-1] > num[j])       //把小的元素往前移动
+            	swap(num[j], num[j-1]);
+        }
+    }
+}
+```
+
+冒泡排序的一种优化：当一轮内循环没有再发生交换时，则说明序列已经是有序的，不再需要进行剩余的比较。
+
+```c++
+void BubbleSort(int *num, int len){
+    bool flag = true;
+    for(int i = 0; i < len & flag; i++){
+    	flag = false;
+        for(int j = len - 1; j > i; j--){
+            if(num[j-1] > num[j]){
+                swap(num[j-1], num[j]);
+                flag = true;
+            }
+        }
+    }
+}
+```
+
+再改进的冒泡排序中，最好的情况是比较n-1次，最坏比较1+2+……+n次；平均复杂度为O(n^2^)
+
+&nbsp;
+
+#### 4.2 简单选择排序
+
+选择排序，每次在一趟i中的n-i+1个数中，选择关键字最小的记录作为第i个记录。
+
+简单选择排序，通过n-i次关键字的比较，从n-i+1个数中选择关键字最小的记录，**然后和第i个位置进行交换**
+
+```c++
+void SelectSort(int *num, int len){
+    int min;
+    for(int i = 0; i < len; i++){
+        min = i;
+        for(int j = i +１; j < len;　j++){
+            if(num[j] < num[min])
+            	min = j;
+        }
+        if(min != i)
+        	swap(num[i], num[min]);
+    }
+}
+```
+
+简单选择排序，一趟i需要比较n-i次的比较，1+2+……+n-1次，时间复杂度为O(n^2^)。
+
+&nbsp;
+
+#### 4.3 直接插入排序
+
+直接插入排序，将一个记录插入到已经有序的序列中，得到一个长度加1的新的有序列。
+
+```c++
+void InsertSort(int *num, int len){
+    for(int i = 1 ; i < len ; i++){  //从第二个数开始，假定第一个是有序的
+        if(num[i] < num[i-1]){
+        	int temp = num[i] , j;
+            for(j = i-1; num[j] > temp; j--)
+            	num[j+1] = num[j];   //记录后移
+            num[j+1] = temp;
+        }
+    }
+}
+```
+
+最好的情况，不需要移动，n次比较即可，O(n)；最坏情况是O(n^2^)；
+
+&nbsp;
+
+#### 4.4 希尔排序
+
+插入排序的变种。直接插入排序在数列基本有序或者序列基数不大的情况下，效率较好。
+
+因为在基数较少的情况中，插入高效。所以希尔排序将序列分为若干基本有序的子序列，分别在子序列中直接插入，然后再对整体记录进行一次直接插入。
+
+> 基本有序：大的数在基本在后，小的数基本在左。
+
+分割序列的目的是减少待排序的个数，并使整个序列向有序发展。不是直接分割序列，而是**跳跃间隔式**的分割策略——将相距某个增量的记录组成一个子序列，这样能保证子序列内部进行插入排序时，形成整体的基本有序。
+
+```c++
+void ShellSort(int *num, int len){
+    int i, j;
+    int increment = len;
+    do{
+        increment = increment / 3 + 1;   //增量的变化
+        for(i = increment; i < len; i++){
+        	int temp;
+            if(num[i] < num[i-increment]){
+                temp = num[i]; 
+                for(j = i - increment; num[j] > temp && j >= 0; j -= increment)
+                	num[j+increment] = num[j];   //后移
+                num[j+increment] = temp;
+            }
+        }
+    }while(increment>1)
+}
+```
+
+希尔排序的关键在于增量的选择，增量的选择暂时没有最好的解决方案。增量排序的最后一个值必须是1。其平均复杂度为O(n^2^)。
+
+&nbsp;
+
+#### 4.5 堆排序
+
+选择排序的变种。
+
+在简单选择排序中，将比较的每一趟能够记录下来。不需要在下一次比较中，又重复了许多相同的比较。
+
+堆是一种完全二叉树，每个结点的值都大于等于子结点为大顶堆，或者小于等于子结点为小顶堆。
+
+> 大顶堆从小到大排序，小顶堆从大到小排序
+
+每次拿堆顶元素，和最后元素交换；再将n-1个元素重新调整成大顶堆，再取出次大元素……
+
+```c++
+void HeapSort(int *num, int len){
+    for(int i = len/2; i >= 0; i--)
+    	HeapAdjust(num, i, len);   //调整，建堆
+    for(int i = len - 1; i >= 0; i--){
+        swap(num[i], num[0]); //交换到顶
+        HeapAdjust(num, 0, i - 1);
+    }
+}
+//调整, 从s位置，其他满足堆的情况，往下调整
+void HeapAdjust(int *num, int s, int m){
+    int temp = num[s];
+    for(int j = 2 * s; j <= m; j = j * 2){  //不停地向下
+        if(j < m && num[j] < num[j+1]) //右子树
+            j++;
+        if(temp >= num[j])
+            break;
+        num[s] = num[j]；  //num[s]位置是较大的数
+        s = j;
+    }
+    num[s] = temp;    //插入
+}
+```
+
+堆排序的时间复杂度由建堆和堆的调整上，建堆的过程需要O(n)；而重复调整中，需要log级的时间，加上n-1次的取堆顶记录，重建堆的过程为O(nlogn)。
+
+堆排序对序列的原始状态并不敏感，其最好、最坏、平均都是O(nlogn)。初始建堆次数较多，并不适用于序列数较少的情况。
+
+堆排序记录中的比较和交换时跳跃式进行的，堆排序也并不稳定。
+
+&nbsp;
+
+#### 4.6 归并排序
+
+n个单独的有序子序列，两两归并。直到得到长度为n的有序序列。
+
+```c++
+void MSort(int *From, int *To, int s, int t){
+    int m;
+    int temp[MAXSIZE];  //辅助空间
+    if(s==t)
+    	To[s] = From[s];
+    else{
+        m = (s+t) / 2;
+        MSort(From, temp, s, m);
+        MSort(From, temp, m+1, t);
+        Merge(temp, To, s, m, t);
+    }
+}
+
+void Merge(int *From, int *To, int s, int m, int t){
+    for(int j = m+1, k = s; s <= m && j <= t; k++){
+        if(From[s] < From[j])
+        	To[k] = From[s++];
+        else
+        	To[k] = From[j++];
+    }
+    if(s <= m){
+        for(int q = 0; q <= m-s; q++)
+        	To[k+q] = From[s+q];
+    }
+    if(j <= n){
+        for(int q = 0; q <= n-j; q++)
+        	To[k+q] = From[j+q];
+    }
+}
+```
+
+归并排序中，合并的时间为O(n)，要进行logn次归并。其时间复杂度最好、最坏和平均都是O(nlogn)。归并排序需要额外的O(n)的辅助空间，是稳定的。
+
+&nbsp;
+
+#### 4.7 快速排序
+
+交换排序的优化。
+
+通过一趟排序将待排序的记录分成独立的两部分，一部分关键字均比另一部分小。再分别对两部分进行排序，达到整体有序。
+
+```c++
+void QSort(int *num, int low, int high){
+    int key;
+    if(low<high){
+        key = Partition(num, low, high);
+        QSort(num, low, key-1);
+        QSort(num, key+1, high);
+    }
+}
+
+int Partition(int *num, int low, int high){
+    int key = num[low];
+    while(low<high){
+        while(low < high && num[high] >= key)
+        	high--;
+        swap(num[low], num[high]);
+        while(low < high && nums[low] <= key)
+        	low++;
+        swap(num[low], num[high]);
+    }
+    return low;
+}
+```
+
+快速排序，最优情况下为O(nlogn)。最坏的情况下，如逆序或者正序，退化成冒泡排序O(n^2^)。平均值为O(nlogn)。
+
+空间复杂度最好为O(logn)，最坏为O(n)，平均为O(logn)
+
+快速排序同样进行跳跃式比较，不是稳定的排序。
+
+
+
+#### 4.8 基数排序
 
 ```c++
 int main()
@@ -199,6 +446,8 @@ int main()
     return 0;
 }
 ```
+
+#### 
 
 
 
