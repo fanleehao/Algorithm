@@ -914,7 +914,7 @@ int main()
 
   &nbsp;
 
-#### 17. 树的子结构
+#### ==17. 树的子结构==
 
 - 输入两颗二叉树A、B，判断B是不是A的子树
 
@@ -923,28 +923,29 @@ int main()
 - 代码中的flag，可以使用||短路进行省略
 
   ```c++
-  bool HasSubtree(TreeNode* pRoot1, TreeNode* pRoot2){  //递归遍历二叉树1,从根节点开始遍历
-          bool ret = false;
-          if(pRoot1!=NULL && pRoot2!=NULL){
-              if(pRoot1->val==pRoot2->val)
-                  ret = DoesTree1HaveTree2(pRoot1,pRoot2); //以当前结点为起点，遍历是否包含子树
-              if(!ret)
-                  ret = HasSubtree(pRoot1->left, pRoot2);
-              if(!ret)
-                  ret = HasSubtree(pRoot1->right, pRoot2);
-          }
-          return ret;
+  bool HasSubtree(TreeNode* pRoot1, TreeNode* pRoot2){//递归遍历二叉树1,从根节点开始遍历
+      bool ret = false;
+      if(pRoot1!=NULL && pRoot2!=NULL){
+          if(pRoot1->val==pRoot2->val)
+              //以当前结点为起点，遍历是否包含子树
+              ret = DoesTree1HaveTree2(pRoot1,pRoot2);
+          if(!ret)
+              ret = HasSubtree(pRoot1->left, pRoot2);
+          if(!ret)
+              ret = HasSubtree(pRoot1->right, pRoot2);
       }
-      bool DoesTree1HaveTree2(TreeNode* pRoot1, TreeNode* pRoot2){
-          if(pRoot2==NULL)
-              return true;
-          if(pRoot1==NULL)
-              return false;
-          if(pRoot1->val != pRoot2->val)
-              return false;
-          return DoesTree1HaveTree2(pRoot1->left,pRoot2->left) && 	
-              	DoesTree1HaveTree2(pRoot1->right,pRoot2->right);
-      }
+      return ret;
+  }
+  bool DoesTree1HaveTree2(TreeNode* pRoot1, TreeNode* pRoot2){
+      if(pRoot2==NULL)
+          return true;
+      if(pRoot1==NULL)
+          return false;
+      if(pRoot1->val != pRoot2->val)
+          return false;
+      return DoesTree1HaveTree2(pRoot1->left,pRoot2->left) && 	
+              DoesTree1HaveTree2(pRoot1->right,pRoot2->right);
+  }
   ```
 
 &nbsp;
@@ -998,3 +999,310 @@ int main()
 
 #### 19. 顺时针打印矩阵
 
+- 输入一个矩阵，按照从外向里以顺时针的顺序依次打印出每一个数字，例如，如果输入如下4 X 4矩阵：
+
+  > 1  2  3  4
+  >  5  6  7  8
+  >  9  10 11 12
+  >  13 14 15 16 
+
+- 则依次打印出数字1,2,3,4,8,12,16,15,14,13,9,5,6,7,11,10.
+
+  ```
+  vector<int> printMatrix(vector<vector<int> > matrix) {
+      if (matrix.empty() || matrix[0].empty()) return {};
+      int m = matrix.size(), n = matrix[0].size();
+      vector<int> res;
+      int up = 0, down = m - 1, left = 0, right = n - 1;
+      while (true) {
+          for (int j = left; j <= right; ++j) res.push_back(matrix[up][j]);
+          if (++up > down) break;
+          for (int i = up; i <= down; ++i) res.push_back(matrix[i][right]);
+          if (--right < left) break;
+          for (int j = right; j >= left; --j) res.push_back(matrix[down][j]);
+          if (--down < up) break;
+          for (int i = down; i >= up; --i) res.push_back(matrix[i][left]);
+          if (++left > right) break;
+      }
+      return res;
+  }
+  ```
+
+&nbsp;
+
+#### 20. 包含min函数的栈
+
+- 设计栈的结构，使得栈的pop/push/min操作，都是O(1)的复杂度需求
+
+- 使用辅助的栈，来保存每次入栈操作的最小元素。这样，在出栈时就能保证次小元素依然能够获取。每次获取辅助栈顶元素，即为最小值。
+
+  ```c++
+  void push(int value) {
+          m_data.push(value);
+          if(m_min.size() == 0 || value < m_min.top())
+              m_min.push(value);
+          else
+              m_min.push(m_min.top());
+      }
+      void pop() {
+          m_data.pop();    //这里可以需要判断栈是否为空
+          m_min.pop();
+      }
+      int top() {
+          return m_data.top();   //同上
+      }
+      int min() {
+          return m_min.top();   //同上
+      }
+   private:
+      stack<int> m_data;
+      stack<int> m_min;
+  ```
+
+  &nbsp;
+
+#### 21. 栈的压入与弹出
+
+- 给定压栈序列，判断出栈序列是否合法
+
+- 规律：如果下一个弹出序列的数字是栈顶数字，则直接弹出；否则，将入栈中直至待弹出的所有数字都压入栈，如果都压入了还没找到下一个弹出的数字，则不合法。
+
+  ```c++
+  bool IsPopOrder(vector<int> pushV,vector<int> popV) {
+          bool ret = false;
+          vector<int> stack;
+          for(int i =0, j = 0; i < pushV.size();){
+              stack.push_back(pushV[i++]);
+              while(j < popV.size() && popV[j] == stack.back()){
+                  stack.pop_back();
+                  j++;
+              }
+          }
+          return stack.empty();
+      }
+  ```
+
+&nbsp;
+
+#### 22. 从上往下打印二叉树
+
+- 层序遍历
+
+- 其实也是广度优先，BFS
+
+  ```c++
+  vector<int> PrintFromTopToBottom(TreeNode* root) {
+          vector<int> ret;
+          if(root == NULL)
+              return {};
+          deque<TreeNode *> dequeTreeNode;
+          dequeTreeNode.push_back(root);
+          while(dequeTreeNode.size()){
+              TreeNode *pNode = dequeTreeNode.front();
+              dequeTreeNode.pop_front();
+              ret.push_back(pNode->val);
+              if(pNode->left)
+                  dequeTreeNode.push_back(pNode->left);
+              if(pNode->right)
+                  dequeTreeNode.push_back(pNode->right);
+          }
+          return ret;
+      }
+  ```
+
+&nbsp;
+
+#### 23. 二叉搜索树的后续遍历
+
+- 判断一个数组是不是某二叉搜索树的后序遍历结果
+
+  ```c++
+  bool VerifySquenceOfBST(int sequence[], int length) {
+      if(sequence = NULL || length <= 0) 
+          return false;
+      int root = sequence[len-1];
+      int i = 0;
+      for(;i < len-1; ++i){
+          if(sequence[i]>root) 
+              break; // 找到第一个大于根结点的位置，则左边为左子树，右边为右子树
+      }
+      int j = i;
+      for(;j < len-1; ++j){ // 循环时去除root，因此为len-1
+          if(sequence[j]<root) 
+              return false; // 有一个小于root，则返回false
+      }    
+      bool left = true,right = true; // 看左右子树是否是二叉搜索树
+      if(i > 0) 
+          left = VerifySquenceOfBST(sequence, i);
+      if(i < length - 1) 
+          right = VerifySquenceOfBST(sequence + i, length - i - 1);
+      return (left && right);
+  }
+  -------------------------------------------------------------------------------
+  public:
+      bool VerifySquenceOfBST(vector<int> a) {
+          if(!a.size()) 
+              return false;
+          return judge(a, 0, a.size() - 1);
+      }
+  	bool judge(vector<int>& a, int l, int r){
+          if(l >= r) return true;
+          int i = r;
+          while(i > l && a[i - 1] > a[r]) 
+              --i;
+          for(int j = i - 1; j >= l; --j) 
+              if(a[j] > a[r]) 
+                  return false;
+          return judge(a, l, i - 1) && (judge(a, i, r - 1));
+      }
+  ------------------------------------------------------------------------------
+  //非递归
+  bool VerifySquenceOfBST(vector<int> sequence) {
+          int size = sequence.size();
+          if(0==size)return false;
+   
+          int i = 0;
+          while(--size)
+          {
+              while(sequence[i++]<sequence[size]);
+              while(sequence[i++]>sequence[size]); 
+              if(i<size)
+                  return false;
+              i=0;
+          }
+          return true;
+      }
+  ```
+
+&nbsp;
+
+#### 24. 二叉树中和为某一值的路径
+
+- 输入一颗二叉树和一个整数，打印出二叉树中结点值的和为目标数的所有路径。（根结点到叶结点）
+
+- 回溯+递归
+
+  ```c++
+  vector<vector<int> > FindPath(TreeNode* root,int expectNumber) {
+          if(root == NULL)
+              return {};
+          vector<vector<int>> res;
+          vector<int> path;
+          int curSum = 0;
+          FindPath(root, res, path, curSum, expectNumber);
+          return res;
+      }
+      void FindPath(TreeNode *root, vector<vector<int>> &res, vector<int> &path,int curSum,int expectNumber){
+          curSum += root->val;
+          path.push_back(root->val);
+          //叶子结点
+          bool isLeaf = root->left == NULL && root->right == NULL;
+          if(curSum == expectNumber && isLeaf){
+              res.push_back(path);
+          }
+          if(root->left != NULL)
+              FindPath(root->left, res, path, curSum, expectNumber);
+          if(root->right != NULL)
+              FindPath(root->right, res, path, curSum, expectNumber);
+          //回溯
+          curSum -= root->val;
+          path.pop_back();
+      }
+  ```
+
+&nbsp;
+
+#### 25. 复杂链表的复制
+
+- 链表中的结点，除了有一个指向下一个结点的指针，还有一个指向任意结点或者为NULL的指针。
+
+  > struct ComplexListNode{
+  > ​	int value;
+  > ​	ComplexListNode * pNext;
+  > ​	ComplexListNode * pSibling;
+  >
+  > };
+
+- 思路1：复制所有的结点，及其next指针，连成链；再去找每一个的sibling链对象；O(n^2^)
+
+- 思路2：使用哈希表，存储<N,N’>的对应关系；空间换时间
+
+- 思路3：将复制的结点插入在当前结点的next位置，再修改sibiling的指针；最后拆分两个链表——奇偶分离；
+
+  ```c++
+  RandomListNode* Clone(RandomListNode* pHead){
+      //复制
+      CloneNodes(pHead);
+      ConnectRandomNodes(pHead);  //连接
+      return ReconnectNodes(pHead);  //分离
+  }
+  void CloneNodes(RandomListNode* pHead){
+      RandomListNode* pNode = pHead;
+      while(pNode != NULL){
+          RandomListNode* pCloned = new RandomListNode(pNode->label);
+          pCloned->label = pNode->label;
+          pCloned->next = pNode->next;
+          pCloned->random = NULL;
+  
+          pNode->next = pCloned;
+          pNode = pNode->next;
+      }
+  }
+  void ConnectRandomNodes(RandomListNode * pHead){
+      RandomListNode* pNode = pHead;
+      while(pNode != NULL){
+          RandomListNode * pCloned = pNode->next;
+          if(pNode->random != NULL)
+              pCloned->random = pNode->random->next;
+          pNode = pCloned->next;
+      }
+  }
+  RandomListNode * ReconnectNodes(RandomListNode *pHead){
+      RandomListNode * pNode = pHead;
+      RandomListNode * pClonedHead = NULL;
+      RandomListNode * pClonedNode = NULL;
+      if(pNode != NULL){
+          pClonedHead = pClonedNode = pNode->next;
+          pNode->next = pClonedNode->next;
+          pNode = pNode->next;
+      }
+      while(pNode != NULL){
+          pClonedNode->next = pNode->next;
+          pClonedNode = pClonedNode->next;
+          pNode->next = pClonedNode->next;
+          pNode = pNode->next;
+      }
+      return pClonedHead;
+  }
+  ```
+
+  ```c++
+  RandomListNode* Clone(RandomListNode* pHead){
+      if(!pHead) return NULL;
+      RandomListNode *currNode = pHead;
+      while(currNode){
+          RandomListNode *node = new RandomListNode(currNode->label);
+          node->next = currNode->next;
+          currNode->next = node;
+          currNode = node->next;
+      }
+      currNode = pHead;
+      while(currNode){
+          RandomListNode *node = currNode->next;
+          if(currNode->random){               
+              node->random = currNode->random->next;
+          }
+          currNode = node->next;
+      }
+      //拆分
+      RandomListNode *pCloneHead = pHead->next;
+      RandomListNode *tmp;
+      currNode = pHead;
+      while(currNode->next){
+          tmp = currNode->next;
+          currNode->next =tmp->next;
+          currNode = tmp;
+      }
+      return pCloneHead;
+  }
+  ```
