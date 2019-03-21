@@ -1306,3 +1306,293 @@ int main()
       return pCloneHead;
   }
   ```
+
+&nbsp;
+
+#### ==26. 二叉搜索树与双向链表==
+
+- 输入一颗二叉搜索树，将该二叉搜索树转换成一个排序的双向链表。不能创建新的结点，只能调整原结点的指针。
+
+- 思路：原结点的左指针指向前驱，右指针指向后继
+
+  ```c++
+  //递归
+  TreeNode* Convert(TreeNode* pRootOfTree){
+      if(pRootOfTree == NULL)
+          return NULL;
+      TreeNode* list1 = Convert(pRootOfTree->left);    // 将左子树变为排序链表
+      TreeNode* list2 = Convert(pRootOfTree->right);   // 将右子树变为排序链表
+      TreeNode* tmp = list1;
+      if(tmp != NULL){
+          while(tmp->right)
+              tmp = tmp->right;    //找到最右边的链表结点
+          tmp->right = pRootOfTree;
+      }
+      pRootOfTree->left  = tmp;
+      pRootOfTree->right = list2;
+      if(list2 != NULL)
+          list2->left = pRootOfTree;
+      return list1 == NULL ? pRootOfTree : list1;
+  }
+  //非递归
+  public TreeNode ConvertBSTToBiList(TreeNode root) {
+      if(root==null)
+          return null;
+      Stack<TreeNode> stack = new Stack<TreeNode>();
+      TreeNode p = root;
+      TreeNode pre = null;// 用于保存中序遍历序列的上一节点
+      boolean isFirst = true;
+      while(p!=null||!stack.isEmpty()){
+          while(p!=null){
+              stack.push(p);
+              p = p.left;
+          }
+          p = stack.pop();
+          if(isFirst){
+              root = p;// 将中序遍历序列中的第一个节点记为root
+              pre = root;
+              isFirst = false;
+          }else{
+              pre.right = p;
+              p.left = pre;
+              pre = p;
+          }      
+          p = p.right;
+      }
+      return root;
+  }
+  ————————————————————————————————————————————————————————————————
+  //另一种解题思路
+  vector<TreeNode*> nodes;
+  void tranverse(TreeNode* pRoot) {
+      if (nullptr == pRoot)
+          return;
+      tranverse(pRoot->left);
+      nodes.push_back(pRoot);
+      tranverse(pRoot->right);
+  }
+  TreeNode* adjustTree() {
+      for (int i = 0; i < nodes.size() - 1; ++i)
+          nodes[i]->right = nodes[i+1];
+      nodes[nodes.size()-1]->right = nullptr;
+      for (int i = nodes.size() - 1; i > 0; --i)
+          nodes[i]->left = nodes[i-1];
+      nodes[0]->left = nullptr;
+      return nodes[0];
+  }
+  TreeNode* Convert(TreeNode* pRoot)
+  {
+      if (nullptr == pRoot)
+          return nullptr;
+      tranverse(pRoot);
+      return adjustTree();
+  }
+  ```
+
+&nbsp;
+
+#### 27. 字符串的排列
+
+- 输入一个字符串，打印该字符串中字符的所有排列
+
+- 递归：求一个字符，和后面所有的字符排列；再将这个字符和后面的字符逐个交换
+
+  ```c++
+  vector<string> Permutation(string str) {
+      set<string> ret;
+      Permutation(str, ret, 0);
+      return vector<string>(ret.begin(), ret.end());
+  }
+  void Permutation(string &str, set<string> &ret, int index){
+      if(index==str.length()-1)
+          ret.insert(str);
+      else{
+          for(int i = index; i < str.length(); i++){
+              swap(str[i], str[index]);
+              Permutation(str, ret, index+1);
+              swap(str[i], str[index]);
+          }
+      }
+  }
+  ```
+
+&nbsp;
+
+### 优化时间和空间效率
+
+#### 28. 数组中出现次数超过一半的数字
+
+- 数组中有一个数字出现的次数超过数组长度的一半，找出。
+
+- 思考1：排序数组中出现次数超过一半的数字，一定是中位数；也就是第n/2大的数。
+
+  ```c++
+  int MoreThanHalfNum_Solution(vector<int> numbers){
+      // 因为用到了sort，时间复杂度O(NlogN)，并非最优
+      if(numbers.empty()) return 0;
+  
+      sort(numbers.begin(),numbers.end()); // 排序，取数组中间那个数
+      int middle = numbers[numbers.size()/2];
+  
+      int count=0; // 出现次数
+      for(int i=0;i<numbers.size();++i){
+          if(numbers[i]==middle) ++count;
+      }
+      return (count>numbers.size()/2) ? middle :  0;
+  }
+  -------------------------------------------------------------------------------
+  //拆分快速排序
+  int MoreThanHalfNum_Solution(vector<int> numbers) {
+      int low = 0, high = numbers.size() - 1;
+      int k = Partition(numbers, low, high);
+      int mid = numbers.size() / 2;
+      while(k != mid){
+          if(k > mid){
+              high = k - 1;
+              k = Partition(numbers, low, high);
+          }
+          else {
+              low = k + 1;
+              k = Partition(numbers, low, high);
+          }
+      }
+      int cnt = 0;
+      for(int x: numbers){
+          if(x==numbers[mid])
+              cnt++;
+      }
+      return cnt * 2 > numbers.size() ? numbers[mid]:0;
+  }
+  int Partition(vector<int> numbers, int low, int high){
+      int key = numbers[low];
+      while(low<high){
+          while(low < high && numbers[high] >= key)
+              high--;
+          swap(numbers[high], numbers[low]);
+          while(low < high && numbers[low] <= key)
+              low++;
+          swap(numbers[high], numbers[low]);
+      }
+      return low;
+  }
+  ```
+
+- 思路2：计数。每次遇到保存的数字，就次数加1；否则次数减1。次数为0后，则保存下一个数字，并设定次数为1.
+
+  原因是：目标数字出现的次数比所有数字出现的次数和还要多。
+
+  ```c++
+  int MoreThanHalfNum_Solution(vector<int> numbers) {
+      int ret = numbers[0];
+      int times = 1, cnt = 0;
+      for(auto x: numbers){
+          if(times == 0){
+              ret = x;
+              times = 1;
+          }
+          else if(x == ret)
+              times++;
+          else times--;
+      }
+      for(auto x: numbers){
+          if(x == ret)
+              cnt++;
+      }
+      return cnt * 2 > numbers.size() ? ret : 0;
+  }
+  ---------------------------------------------------------------
+  //哈希法
+  int MoreThanHalfNum_Solution(vector<int> numbers) {
+      int n = numbers.size();
+      //map 记录出现次数
+      map<int, int> m;
+      int count;
+      for (int i = 0; i < n; i++) {
+          count = ++m[numbers[i]];
+          if (count > n/2) return numbers[i];
+      }
+      return 0;
+  }
+  ```
+
+&nbsp;
+
+#### 29. 最小的K个数
+
+- 输入n个数，找出其中最小的k个数
+
+- 思路1：快排
+
+- 思路2：Parttition思路。每次根据k进行Partition操作，使得比第K个数字小的位于左边，大的位于右边，调整后左边的k个值就是结果（但不一定有序，且这种方法需要交换数组元素）；
+
+  ```c++
+  vector<int> GetLeastNumbers_Solution(vector<int> input, int k) {
+          int low = 0, high = input.size()-1;
+          int index = Partition(input, low, high);
+          if(high<=0||k<=0||k>high+1) return vector<int>();
+          if(k==high+1)
+              return input;
+          while(index != (k-1)){
+              if(index > (k-1)){
+                  high = index - 1;
+                  index = Partition(input, low, high);
+              }
+              else {
+                  low = index + 1;
+                  index = Partition(input, low, high);
+              }
+          }
+          vector<int> ret;
+          for(int i = 0; i < k; i++)
+              ret.push_back(input[i]);
+          return ret;
+      }
+      int Partition(vector<int> &numbers, int low, int high){
+          int key = numbers[low];
+          while(low<high){
+              while(low < high && numbers[high] >= key)
+                  high--;
+              swap(numbers[high], numbers[low]);
+              while(low < high && numbers[low] <= key)
+                  low++;
+              swap(numbers[high], numbers[low]);
+          }
+          return low;
+      }
+  ```
+
+- 思路2：使用大小为K的数据容器进行存储。大顶堆或者红黑树。更新容器中的最大值。当容器满了之后，使用2步操作：
+
+  > 1. 找出k个数中最大的值
+  > 2. 比较下一个数，可能删除最大的值，替换成一个较小的数
+
+  总的时间复杂度为O(nlogK)，可以使用STL的容器，如SET进行辅助。这种解法能够适用于海量数据的分析，也就是N很大、k很小的情况。
+
+  ```c++
+  vector<int> GetLeastNumbers_Solution(vector<int> input, int k) {
+      int low = 0, high = input.size()-1;
+      if(high<=0||k<=0||k>high+1) return vector<int>();
+      if(k==high) return input;
+      multiset<int, greater<int>> ret;
+      multiset<int, greater<int> >::iterator ite; // 定义迭代器
+      for(auto x: input){
+          if(ret.size() < k)
+              ret.insert(x);
+          else{
+              ite = ret.begin();
+              if(*ret.begin() > x){
+                  ret.erase(ite);
+                  ret.insert(x);
+              }
+          }
+      }
+      return vector<int>(ret.begin(), ret.end());
+  }
+  ```
+
+&nbsp;
+
+#### 30. 连续子数组的最大和
+
+- 输入一个整型数据，有正数和负数。求最大的连续子数组的和。要求时间复杂度O(n)；
+- 思路1：
