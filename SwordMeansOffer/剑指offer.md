@@ -1592,7 +1592,254 @@ int main()
 
 &nbsp;
 
-#### 30. 连续子数组的最大和
+#### 30. 连续子数组的最大和（连续）
 
 - 输入一个整型数据，有正数和负数。求最大的连续子数组的和。要求时间复杂度O(n)；
-- 思路1：
+
+- 思路1：暴力，n*(n+1)/2个**连续**子数组。可以使用DFS，或者格雷码反射码求子集。
+
+- 思路2：规律分析法。尝试找到如下规律：当前最大和，如果当前最大和为负、且下一个数为正，则放弃当前值。如果当前最大和为正、且下一个数为负，继续更新。
+
+  ```c++
+  private: bool g_InvalidInput = false;//标识非法输入
+  int FindGreatestSumOfSubArray(vector<int> array) {
+      int len = array.size();
+      if(len <= 0){
+          g_InvalidInput = true;
+          return 0;
+      }
+      g_InvalidInput = false;
+      int curSum = 0, maxSum = INT_MIN;
+      for(int i = 0; i < len; i++){
+          if(curSum <= 0)
+              curSum = array[i];
+          else curSum += array[i];
+          if(curSum > maxSum)
+              maxSum = curSum;
+      }
+      return maxSum;
+  }
+  ```
+
+- 思路3：动态规划。h[i]表示以第i个数字结尾的最大子数组和。分析类同上：第一个数就是自己。对于第i个数结尾的子数组，如果第i-1个数的最大和非正，则舍弃。否则，加上当前的数。
+
+  ```c++
+  int FindGreatestSumOfSubArray(vector<int> array) {
+      int len = array.size();
+      if(len <= 0)
+          return 0;
+      int *h = new int[len], ret = INT_MIN;
+      h[0] = array[0];
+      for(int i = 1; i < len; i++){
+          if(h[i-1] <= 0)
+              h[i] = array[i];
+          else h[i] = h[i-1] + array[i];
+          ret = max(ret, h[i]);
+      }
+      return ret;
+  }
+  ```
+
+&nbsp;
+
+#### 31. 1-n中1出现的次数
+
+- 1-n的自然数，1出现的次数？如1-13，有1、10/11/12/13，共6次1。
+
+- 思路1：暴力，遍历+取模。O(nlogn)
+
+  ```c++
+  int NumberOf1Between1AndN_Solution(int n){
+      int ret = 0;
+      for(int i = 1; i <= n; i++){
+          ret += NumberOf1(i);
+      }
+      return ret;
+  }
+  int NumberOf1(int num){
+      int cnt = 0;
+      while(num){
+          if(num % 10 == 1)
+              cnt++;
+          num /= 10;
+      }
+      return cnt;
+  }
+  ```
+
+- 思路2：数字规律分析+递归
+
+
+
+&nbsp;
+
+#### 32. 把数组排成最小的数
+
+- 给定一个正整数数组，将所有数拼接成一个数，输出最小的那个。如{3,32,321}，输出321323
+
+- 思路1：暴力，求全排列+比较
+
+- 思路2：利用隐含大数思路，将数组组合成字符串，进行自定义排序规则的比较。
+
+  ```c++
+  string PrintMinNumber(vector<int> numbers) {
+      int len = numbers.size();
+      if(len <= 0) return "";
+      sort(numbers.begin(), numbers.end(), cmp);
+      string ret = "";
+      for(int i = 0; i < len; i++){
+          ret += to_string(numbers[i]);
+      }
+      return ret;
+  }
+  static bool cmp(int a, int b){
+      string A="";
+      string B="";   //如果ab < ba,则a排在b之前
+      A += to_string(a);
+      A += to_string(b);
+      B += to_string(b);
+      B += to_string(a);
+      return A < B;
+  }
+  ```
+
+&nbsp;
+
+#### 33. 丑数
+
+- 只包含因子2/3/5的数称作丑数。求按从小到大排列的第1500个丑数。习惯上把1当成第一个丑数
+
+- 思路1：暴力。按序判断每一个数是否是丑数。
+
+  ```c++
+  int GetUglyNumber_Solution(int index) {
+      int cnt = 0, num = 0;
+      if(index <= 0)
+          return 0;
+      while(cnt < index){
+          ++num;
+          if(IsUgly(num))
+              ++cnt;
+      }
+      return num;
+  }
+  bool IsUgly(int num){
+      while(num % 2 == 0)
+          num /= 2;
+      while(num % 3 == 0)
+          num /= 3;
+      while(num % 5 == 0)
+          num /= 5;
+      return (num == 1) ? true : false;
+  }
+  ```
+
+- 思路2：只考虑丑数的来源，维护一个数组，每次新增都是其中的数乘以2/3/5的值。关键在于维护该数组中丑数的有序性。
+
+- 找到乘以2/3/5的数，中第一个大于当前最大丑数的值，再取其中最小的一个。
+
+  ```c++
+  int GetUglyNumber_Solution(int index) {
+      if (index < 7)return index;
+      vector<int> res(index);
+      res[0] = 1;
+      int t2 = 0, t3 = 0, t5 = 0;
+      for (int i = 1; i < index; ++i){
+          res[i] = min(res[t2] * 2, min(res[t3] * 3, res[t5] * 5));
+          if (res[i] == res[t2] * 2)t2++;
+          if (res[i] == res[t3] * 3)t3++;
+          if (res[i] == res[t5] * 5)t5++;
+      }
+      return res[index - 1];
+  }
+  ```
+
+&nbsp;
+
+#### 34. 第一次只出现一次的字符
+
+- 在字符串中找出第一个只出现一次的字符。
+
+- 思路：哈希法。
+
+  ```c++
+  int FirstNotRepeatingChar(string str) {
+      int len = str.length();
+      if(len <= 0) return -1;
+      map<char, int> mm;
+      for(char c: str)
+          mm[c]++;
+      for(int i = 0; i < len; i++){
+          if(mm[str[i]] == 1)
+              return i;
+      }
+      return -1;
+  }
+  ```
+
+&nbsp;
+
+#### 35. 数组中的逆序对
+
+- 给定数组，求逆序对的个数
+
+- 思路1：暴力，O(n^2^)
+
+- 思路2：分治（二分）法+归并统计。分治到单个，归并比较相邻两个数，统计。逐层向上。
+
+- 先用两个指针指向两个子数组的末尾，比较指向数字。第一个子数组数字大于第二个子数组数字，则有逆序对且个数是第二个数组中剩余个数。否则不构成逆序对。每一次比较，将较大数字从后往前复制到新的辅助序列中，确保其实递增排列的。然后将对应指针前移，继续下一轮比较。
+
+  ```c++
+  int InversePairs(vector<int> data) {
+      if(data.size() <= 1) return 0;//如果少于等于1个元素，直接返回0
+      int* copy = new int[data.size()];
+      //初始化该数组，该数组作为存放临时排序的结果，最后要将排序的结果复制到原数组中
+      for(unsigned int i=0; i<data.size(); i++)
+          copy[i] = 0;
+      //调用递归函数求解结果
+      int count=InversePairCore(data, copy, 0, data.size()-1);
+      delete[] copy;//删除临时数组
+      return count;
+  }
+   //程序的主体函数
+  int InversePairCore(vector<int>& data,int*& copy,int start,int end)
+  {
+      if(start == end) {
+          copy[start] = data[start];
+          return 0;
+      }
+      //将数组拆分成两部分
+      int length = (end - start) / 2;//这里使用的下标法，下面要用来计算逆序个数；也可以直接使用mid=（start+end）/2
+      //分别计算左边部分和右边部分
+      int left = InversePairCore(data, copy, start, start+length) % 1000000007;
+      int right = InversePairCore(data, copy, start+length+1, end) % 1000000007;
+      //进行逆序计算
+      int i = start + length;//前一个数组的最后一个下标
+      int j = end;//后一个数组的下标
+      int index = end;//辅助数组下标，从最后一个算起
+      int count = 0;
+      while(i >= start && j >= start + length + 1) {
+          if(data[i] > data[j]) {
+              copy[index--] = data[i--];
+              //统计长度
+              count += j - start - length;
+              if(count >= 1000000007)//数值过大求余
+                  count %= 1000000007;
+          }
+          else copy[index--] = data[j--];
+      }
+      for(; i >= start; --i) 
+          copy[index--] = data[i];
+      for(; j >= start + length + 1; --j) 
+          copy[index--] = data[j];
+      //排序
+      for(int i = start; i <= end; i++)
+          data[i] = copy[i];
+      //返回最终的结果
+      return (count + left + right) % 1000000007;
+  }
+  ```
+
+&nbsp;
+
+#### 36. 两个链表的第一个公共结点
