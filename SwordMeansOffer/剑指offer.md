@@ -1843,3 +1843,260 @@ int main()
 &nbsp;
 
 #### 36. 两个链表的第一个公共结点
+
+- 输入两个链表，找出其第一个公共结点。
+
+- 思路1：暴力，O(m*n)
+
+- 思路2：从后往前遍历，使用栈辅助；找到最后一个不相等的结点；O(m+n)，辅助O(m+n)
+
+- 思路3：计算两个链表的长度，每次在较长的链表先走几步（两个链表长度之差）；找到第一个相同的结点；
+
+  ```c++
+  ListNode* FindFirstCommonNode( ListNode* pHead1, ListNode* pHead2) {
+      int len1 = GetListLen(pHead1);
+      int len2 = GetListLen(pHead2);
+  
+      int dif = len1 - len2;
+      ListNode* shortList = pHead2;
+      ListNode* longList = pHead1;
+      if(dif < 0){
+          shortList = pHead1;
+          longList = pHead2;
+          dif = len2- len1;
+      }
+      //先在长链表走dif步长
+      for(int i = 0; i < dif; i++)
+          longList = longList->next;
+      while(longList != NULL && shortList != NULL && longList != shortList){
+          longList = longList->next;
+          shortList = shortList->next;
+      }
+      return longList;        
+  }
+  int GetListLen(ListNode* pHead){
+      int len = 0;
+      ListNode* node = pHead;
+      while(node != NULL){
+          len++;
+          node = node->next;
+      }
+      return len;
+  }
+  ```
+
+&nbsp;
+
+### 面试中的各项能力
+
+#### 37. 数字在排序数组中出现的次数
+
+- 统计一个数字在排序数组中出现的次数。
+
+- 思路1：暴力
+
+- 思路2：二分的变形；分别使用二分找到某个数字闭区间的上界和下界，都存在则是其差+1；O(logn)
+
+  ```c++
+  int GetNumberOfK(vector<int> data ,int k) {
+      int num = 0;
+      if(!data.empty()){
+          int st = Get1stK(data, k, 0, data.size()-1);
+          int ed = GetEndK(data, k, 0, data.size()-1);
+          if(st > -1 && ed > -1)
+              num = ed - st + 1;
+      }
+      return num;
+  }
+  int Get1stK(vector<int> data, int k, int left, int right){        
+      while(left <= right){
+          int mid = (left + right) / 2;
+          if(data[mid] >= k)
+              right = mid - 1;
+          else 
+              left = mid + 1;
+          if(left < data.size() && data[left]==k)
+              return left;
+      }
+      return -1;
+  }
+  int GetEndK(vector<int> data, int k, int left, int right){
+      while(left <= right){
+          int mid = (left + right) / 2;
+          if(data[mid] <= k)
+              left = mid + 1;
+          else right = mid - 1;
+          if(right >= 0 && data[right] == k)
+              return right;
+      }
+      return -1;
+  }
+  ```
+
+&nbsp;
+
+#### 38. 二叉树的深度
+
+- 从根结点到叶子结点形成树的一条路径，深度为最长路径长度。
+
+- 思路：树的深度等于左右子树较大值+1；递归
+
+  ```c++
+  int TreeDepth(TreeNode* pRoot){
+      if(pRoot == NULL)
+          return 0;
+      int left = TreeDepth(pRoot->left);
+      int right = TreeDepth(pRoot->right);
+      return (right > left) ? right+1:left+1;
+  }
+  ```
+
+- 给定一颗二叉查找树的根结点，判断其是不是平衡二叉树——也即左右子树高度差不大于1.
+
+- 思路1：如上，增加判断即可
+
+  ```c++
+  bool IsBalanced_Solution(TreeNode* pRoot) {
+      if(pRoot == NULL)
+          return true;
+      int left = TreeDepth(pRoot->left);
+      int right = TreeDepth(pRoot->right);
+      int diff = left - right;
+      if(diff < -1 || diff > 1)
+          return false;
+      return IsBalanced_Solution(pRoot->left) && IsBalanced_Solution(pRoot->right);
+  }
+  ```
+
+- 思路2：使用后续遍历思路，每次只需比较一次结点即可；遍历时保存每个子树的深度；
+
+  ```c++
+  bool IsBalanced_Solution(TreeNode* pRoot) {
+      int depth = 0;
+      return IsBalanced(pRoot, &depth);
+  }
+  bool IsBalanced(TreeNode* pRoot, int* depth){
+      if(pRoot == NULL){
+          *depth = 0;
+          return true;
+      }
+      int left, right;
+      if(IsBalanced(pRoot->left, &left) && IsBalanced(pRoot->right, &right)){
+          int diff = left - right;
+          if(diff <=1 && diff >= -1){
+              *depth = (left > right ? left:right) + 1;
+              return true;
+          }
+      }
+      return false;
+  }
+  ```
+
+&nbsp;
+
+#### 39. 数组中只出现一次的数字
+
+- 一个整型数组除两个数字外，其他数字都出现了两次；要求O(n)+O(1)找出这两个数字。
+
+- 思路：**异或操作**。每个数字异或本身都等于0；将所有数分为两组，每组只包含一个出现一次的数字。拆分过程：使用所有数异或结果，找到第一位为1的下标n，以数字得二进制中第n位是不是1分成两组；
+
+  ```c++
+  void FindNumsAppearOnce(vector<int> data,int* num1,int *num2) {
+      if(data.size()<2)
+          return;
+      int resOR = 0;
+      for(int i = 0; i < data.size(); i++)
+          resOR ^= data[i];
+      int index = Find1stBit1(resOR);
+      *num1 = *num2 = 0;
+      for(int j = 0; j < data.size(); j++){
+          if(IsBit1(data[j], index))
+              *num1 ^= data[j];
+          else *num2 ^= data[j];
+      }
+  }
+  int Find1stBit1(int num){
+      int index = 0;
+      while(((num & 1) == 0) && (index < 8*sizeof(int))){
+          num = num >> 1;
+          ++index;
+      }
+      return index;
+  }
+  bool IsBit1(int num, int index){
+      num = num >> index;
+      return (num & 1);
+  }
+  ```
+
+&nbsp;
+
+#### 40. 和为s的两个数字VS和为s的连续正数序列
+
+- 输入一个递增数组和一个数字s，在数组中查找两个数，使得其和正好是s；多对则输出任意一对
+
+- 思路1：暴力，O(n^2^);
+
+- 思路2：双指针。前后指向，每次判断指针指向值之和，根据与目标值大小进行前后移动；
+
+  ```c++
+  vector<int> FindNumbersWithSum(vector<int> array,int sum) {
+      int left = 0, right = array.size() - 1;
+      if(left >= right) return {};
+      vector<int> res(2,0);
+      int mul = INT_MAX;
+      while(left < right){
+          int temp = array[left] + array[right];
+          if(temp == sum && array[left] * array[right] < mul){
+              res[0] = array[left]; res[1] = array[right];
+              mul = res[0] * res[1];
+          }
+          else if(temp > sum)
+              right--;
+          else left++;
+      }
+      if(res[0] != 0 && res[1] != 0)
+          return res;
+      else return {};
+  }
+  ```
+
+- 输入一个正整数s，打印出所有和为s的连续正数序列（至少含有两个）。
+
+- 思路：同上，双指针；
+
+  ```c++
+  vector<vector<int> > FindContinuousSequence(int sum) {
+      int left = 1, right = 2;
+      int mid = (1+sum) / 2;
+      int temp = left + right;
+      vector<vector<int> > ret;
+      while(left < mid){
+          if(temp == sum){                            
+              vector<int> t;
+              for(int i = left; i <= right; i++)
+                  t.push_back(i);
+              ret.push_back(t);
+          }
+          while(temp > sum && left < mid){
+              temp -= left;
+              left++;
+              if(temp == sum){
+                  vector<int> t;
+                  for(int i = left; i <= right; i++)
+                      t.push_back(i);
+                  ret.push_back(t);
+              }
+          }
+          right++;
+          temp += right;
+      }
+      return ret;
+  }
+  ```
+
+
+
+
+
+
