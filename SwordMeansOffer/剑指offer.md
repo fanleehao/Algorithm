@@ -2095,6 +2095,197 @@ int main()
   }
   ```
 
+&nbsp;
+
+#### 41. 翻转单词顺序 VS 左旋转字符串
+
+- 一：输入一个英文句子，翻转句子中单词的顺序，但单词内字符顺序不变
+
+- 思路1：先将整个字符串翻转，然后逐个翻转每个单词；
+
+  ```c++
+  void ReverseWord(string &str, int s, int e){
+      while(s < e)
+          swap(str[s++], str[e--]);
+   } 
+  string ReverseSentence(string str) {
+      ReverseWord(str, 0, str.size() - 1); //先整体翻转
+      int s = 0, e = 0;
+      int i = 0;
+      while(i < str.size()){
+          while(i < str.size() && str[i] == ' ') //空格跳过
+              i++;
+          e = s = i; //记录单词的第一个字符的位置
+          while(i < str.size() && str[i] != ' '){ //不是空格 找单词最后一个字符的位置
+              i++;
+              e++;
+          }
+          ReverseWord(str, s, e - 1); //局部翻转
+      }
+      return str;
+  }
+  ```
+
+- 思路2：栈；或者直接反向拼接，然后输出即可
+
+  ```c++
+  string ReverseSentence(string str) {
+      string res = "", tmp = "";
+      for(unsigned int i = 0; i < str.size(); ++i){
+          if(str[i] == ' ') res = " " + tmp + res, tmp = "";
+          else tmp += str[i];
+      }
+      if(tmp.size()) res = tmp + res;
+      return res;
+  }
+  ```
+
+
+
+- 题2：字符串的左旋操作是把字符串前面的若干个字符转移到字符串的末尾。
+
+- 思路：类上，先翻转前n位，再翻转后N-n位，最后旋转整个字符串
+
+  ```c++
+  string LeftRotateString(string str, int n) {
+      if(str.empty() || n > str.length())
+          return str;
+      reverse(str, 0, n-1);
+      reverse(str, n, str.length()-1);
+      reverse(str, 0, str.length()-1);
+      return str;
+  }
+  void reverse(string &str, int left, int right){
+      while(left<right){
+          swap(str[left++], str[right--]);
+      }
+  }
+  ```
+
+&nbsp;
+
+#### 42. n个骰子的点数
+
+- 把n个骰子投掷，所有骰子朝上一面点数和为s；输入n，输出s的所有可能值出现的概率
+
+- 每个骰子6面，出现点数的概率总数为6^n^；求出每个点数的频次/6^n^，即为概率；
+
+- 思路1：基于递归求解；1个骰子可能有6中情况，分别约剩下的n-1个组合；
+
+  ```c++
+  int G = 6;  //一个常数
+  void Probability(int n, int * p){
+      for(int i = 1; i <= G; i++)
+          Probability2(n, n, i, p);
+  }
+  void Probability2(int origianl, int current, int sum, int *p){
+      if(current == 1) p[sum - original]++;
+      else{
+          for(int i = 1; i <= G; i++)
+              Probability2(original, current - 1, sum + i, p);
+      }
+  }
+  void PrintProbability(int n){
+      if(n < 1) return;
+      int maxSum = n * G;   //出现的最大的数为n*G
+      int *p = new int[maxSum - n + 1];   //定义n-n*G的数组范围表示
+      for(int i = n; i <= maxSum; i++){
+          p[i] = 0;  //概率都是0；
+      }
+      Probability(n, p);
+  }
+  ```
+
+- 思路2：基于循环求骰子点数；
+
+
+
+&nbsp;
+
+#### 43. 扑克牌的顺子
+
+- 从扑克牌中随机抽5张牌，判断是不是一个顺子，即这5张牌是不是连续的；大小王可为任意数字；
+
+- 思路：看做一个5位数字组成的数组，观察是否有序？若无，0代表的大小王是否可以填充？
+
+  1. 数组排序
+  2. 统计0的个数、排序后相邻数字间空格总数
+  3. 若空缺总数小于或等于0的个数，则有序——顺子
+  4. 不能包含有对子——数字重复出现
+
+  ```c++
+  bool IsContinuous( vector<int> numbers ) {
+      if(numbers.empty()) return false;
+      int len = numbers.size();
+      sort(numbers.begin(), numbers.end());
+      int nOf0 = 0, nOfGap = 0;
+      for(int i = 0 ; i < len && numbers[i] == 0; i++)
+          nOf0++;
+      int small = nOf0;
+      int big = small + 1;
+      while(big < len){
+          if(numbers[small] == numbers[big])
+              return false; //对子出现
+          nOfGap += numbers[big] - numbers[small] - 1;
+          small = big;
+          big++;
+      }
+      return (nOfGap > nOf0) ? false:true;
+  }
+  ```
+
+&nbsp;
+
+#### 44. 圆圈中最后剩下的数字
+
+- 0,1，…，n-1；n个数字排成一个圆圈，从数字0开始每次从这个圆圈里删除第m个数字。求出这个圆圈中剩下的最后一个数字
+
+- 思路1：环形链表模拟圆圈；注意，每当链表遍历到尾时，则转回到链表头；O(mn)，空间O(n)
+
+  ```c++
+  int LastRemaining_Solution(int n, int m){
+      if(n < 1 || m < 1)
+          return -1;
+      list<int> numbers;
+      for(int i = 0; i < n; i++)
+          numbers.push_back(i);
+      list<int>::iterator ite = numbers.begin();
+      while(numbers.size() > 1){
+          for(int i = 1; i < m; i++){
+              ite++;
+              if(ite == numbers.end())
+                  ite = numbers.begin();
+          }
+          list<int>::iterator next = ++ite;
+          if(next == numbers.end())
+              next = numbers.begin();
+          --ite;
+          numbers.erase(ite);
+          ite = next;
+      }
+      return *ite;
+  }
+  ```
+
+- 思路2：约瑟夫环；找出递归公式；
+
+  ​	$f(n,m)=0 ,n=1;$
+  ​	$f(n,m)=[f(n-1,m) + m] \%n,  n>1$
+
+  ```c++
+  int LastRemaining_Solution(int n, int m){
+      if(n < 1||m<1) return -1;
+      int ret = 0;
+      for(int i = 2; i <= n; i++)
+          ret = (ret + m) % i;
+      return ret;
+  }
+  ```
+
+&nbsp;
+
+
+
 
 
 
