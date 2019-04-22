@@ -2284,7 +2284,36 @@ int main()
 
 &nbsp;
 
+#### 45. 求1+…+n
 
+- 发散思维：不使用乘除法、循环、条件判断语句等求解；
+- 思路1：构造函数求解
+- 思路2：虚函数
+- 思路3：指针函数
+- 思路4：模板
+
+&nbsp;
+
+#### 46. 不用加减乘除做加法
+
+- 思路：位运算
+
+  ```c++
+  int Add(int num1, int num2){
+      int sum, carry;
+      do{
+          sum = num1 ^ num2;  //异或不进位
+          carry = (num1 & num2) << 1;  //与操作然后左移一位
+          num1 = sum;
+          num2 = carry;
+      }while(num2 != 0);
+      return num1;
+  }
+  ```
+
+  &nbsp;
+
+#### 47.
 
 
 
